@@ -3,7 +3,7 @@ import { PARAMETER_DESCRIPTIONS } from "../constants"
 
 export function getInsertContentDescription(args: ToolArgs): string {
 	return `## insert_content
-Description: Add new lines to a file without modifying existing content. Ideal for adding imports, functions, or configuration blocks.
+Description: Add new lines to a file without modifying existing content
 
 Parameters:
 - path: (required) ${PARAMETER_DESCRIPTIONS.PATH(args.cwd.toPosix())}

@@ -8,23 +8,22 @@
 /**
  * Standard formatting instructions for tool use
  */
-export const TOOL_USE_FORMAT = `Tool use is formatted using XML-style tags. Tool name and parameters are enclosed in their respective tags:
+export const TOOL_USE_FORMAT = `Tool use follows XML-style tags with tool name and parameters in their respective tags:
 
 <tool_name>
 <parameter1_name>value1</parameter1_name>
 <parameter2_name>value2</parameter2_name>
-...
 </tool_name>`
 
 /**
  * Standard description of workspace directory functionality
  */
-export const WORKSPACE_DIR_EXPLANATION = `The workspace directory is the active VS Code project directory and the default directory for tool operations. New terminals start in this directory.`
+export const WORKSPACE_DIR_EXPLANATION = `The workspace directory is the active VS Code project directory and default for tool operations. New terminals start here.`
 
 /**
  * Standard warning about providing complete file content
  */
-export const FILE_CONTENT_WARNING = `ALWAYS provide the COMPLETE file content without truncation or omissions. Include ALL parts of the file, even unmodified sections.`
+export const FILE_CONTENT_WARNING = `ALWAYS provide COMPLETE file content without omissions. Include ALL parts of the file, even unmodified sections.`
 
 /**
  * Standard parameter descriptions for common parameters

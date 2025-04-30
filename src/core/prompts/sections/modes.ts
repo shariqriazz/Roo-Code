@@ -26,10 +26,10 @@ export async function getModesSection(context: vscode.ExtensionContext): Promise
 
 MODES
 
-- These are the currently available modes:
+Available modes:
 ${modesList}
 
-If the user asks you to create or edit a new mode for this project, you should read the instructions by using the fetch_instructions tool, like this:
+For creating/editing modes:
 <fetch_instructions>
 <task>create_mode</task>
 </fetch_instructions>

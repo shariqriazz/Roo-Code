@@ -1,14 +1,9 @@
 export function getSwitchModeDescription(): string {
 	return `## switch_mode
-Description: Switch to a different mode when specialized capabilities are needed. Requires user approval.
+Description: Switch to a different mode for specialized capabilities
 Parameters:
-- mode_slug: (required) Target mode identifier (e.g., "code", "ask", "architect")
+- mode_slug: (required) Target mode identifier
 - reason: (optional) Justification for mode switch
-Usage:
-<switch_mode>
-<mode_slug>target_mode</mode_slug>
-<reason>Justification</reason>
-</switch_mode>
 
 Example:
 <switch_mode>

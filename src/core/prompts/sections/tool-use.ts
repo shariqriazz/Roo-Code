@@ -5,13 +5,13 @@ export function getSharedToolUseSection(): string {
 
 TOOL USE
 
-You have access to a set of tools that are executed upon the user's approval. You can use one tool per message, and will receive the result of that tool use in the user's response. You use tools step-by-step to accomplish a given task, with each tool use informed by the result of the previous tool use.
+You have access to tools that execute upon user approval. Use one tool per message, and receive results in the user's response. Use tools step-by-step to accomplish tasks, with each use informed by previous results.
 
 # Tool Use Formatting
 
 ${TOOL_USE_FORMAT}
 
-For example:
+Example:
 
 <read_file>
 <path>src/main.js</path>

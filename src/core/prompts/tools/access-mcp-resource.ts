@@ -5,15 +5,10 @@ export function getAccessMcpResourceDescription(args: ToolArgs): string | undefi
 		return undefined
 	}
 	return `## access_mcp_resource
-Description: Access resources (data, files, API responses) from connected MCP servers.
+Description: Access resources from connected MCP servers
 Parameters:
-- server_name: (required) Name of the MCP server providing the resource
+- server_name: (required) Name of the MCP server
 - uri: (required) Resource identifier URI
-Usage:
-<access_mcp_resource>
-<server_name>server name</server_name>
-<uri>resource URI</uri>
-</access_mcp_resource>
 
 Example:
 <access_mcp_resource>

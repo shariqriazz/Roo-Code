@@ -62,10 +62,9 @@ export async function getMcpServersSection(
 
 	const baseSection = `MCP SERVERS
 
-The Model Context Protocol (MCP) enables communication with servers that provide additional tools and resources. Types:
-
-1. Local (Stdio-based): Run on user's machine via standard input/output
-2. Remote (SSE-based): Run on remote machines via HTTP/HTTPS
+The Model Context Protocol (MCP) enables communication with servers providing additional tools and resources:
+1. Local (Stdio-based): Run on user's machine
+2. Remote (SSE-based): Run on remote machines
 
 # Connected MCP Servers
 
@@ -83,7 +82,7 @@ ${connectedServers}`
 
 ## Creating an MCP Server
 
-If asked to "add a tool" for specific functionality, get detailed instructions using:
+For detailed instructions:
 <fetch_instructions>
 <task>create_mcp_server</task>
 </fetch_instructions>`

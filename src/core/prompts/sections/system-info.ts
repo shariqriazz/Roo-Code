@@ -11,7 +11,7 @@ import { WORKSPACE_DIR_EXPLANATION } from "../constants"
  * @param customModes - Custom mode configurations
  * @returns Formatted system information section
  */
-export function getSystemInfoSection(cwd: string, _currentMode: Mode, _customModes?: ModeConfig[]): string {
+export function getSystemInfoSection(_cwd: string, _currentMode: Mode, _customModes?: ModeConfig[]): string {
 	return `====
 
 SYSTEM INFORMATION
@@ -19,7 +19,7 @@ SYSTEM INFORMATION
 Operating System: ${osName()}
 Default Shell: ${getShell()}
 Home Directory: ${os.homedir().toPosix()}
-Current Workspace Directory: ${cwd.toPosix()}
+Current Workspace Directory:
 
-${WORKSPACE_DIR_EXPLANATION} When the user gives you a task, you'll receive a file list in environment_details to help understand the project structure. For directories outside the workspace, use list_files with recursive=true for full listing or false for top-level contents.`
+${WORKSPACE_DIR_EXPLANATION} New terminals start here. For directories outside workspace, use list_files with recursive=true for full listing or false for top-level contents.`
 }
