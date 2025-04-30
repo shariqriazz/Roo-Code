@@ -185,24 +185,61 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	console.log(`${Date.now()} [cli#runExercise] Opening new VS Code window at ${workspacePath}`)
 
-	await execa({
-		env: {
-			ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
-		},
-		shell: "/bin/bash",
-	})`code --disable-workspace-trust -n ${workspacePath}`
+	// Add retry logic for VS Code launch
+	let retryCount = 0
+	const maxRetries = 3
+	let client: IpcClient | null = null
 
-	// Give VSCode some time to spawn before connecting to its unix socket.
-	await new Promise((resolve) => setTimeout(resolve, 3_000))
-	console.log(`${Date.now()} [cli#runExercise] Connecting to ${taskSocketPath}`)
-	const client = new IpcClient(taskSocketPath)
+	while (retryCount < maxRetries) {
+		try {
+			await execa({
+				env: {
+					ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
+				},
+				shell: "/bin/bash",
+			})`code --disable-workspace-trust -n ${workspacePath}`
 
-	try {
-		await pWaitFor(() => client.isReady, { interval: 250, timeout: 5_000 })
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	} catch (error) {
-		console.log(`${Date.now()} [cli#runExercise | ${language} / ${exercise}] unable to connect`)
-		client.disconnect()
+			// Give VSCode some time to spawn before connecting to its unix socket.
+			await new Promise((resolve) => setTimeout(resolve, 3_000))
+			console.log(`${Date.now()} [cli#runExercise] Connecting to ${taskSocketPath} (attempt ${retryCount + 1})`)
+			client = new IpcClient(taskSocketPath)
+
+			// Try to connect
+			await pWaitFor(() => client!.isReady, { interval: 250, timeout: 10_000 })
+
+			// If we get here, VS Code launched successfully
+			console.log(`${Date.now()} [cli#runExercise] Successfully connected to VS Code (attempt ${retryCount + 1})`)
+			break
+		} catch (error) {
+			retryCount++
+			console.log(
+				`${Date.now()} [cli#runExercise] VS Code launch attempt ${retryCount} failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+			)
+
+			// Disconnect the client if it was created
+			if (client) {
+				client.disconnect()
+				client = null
+			}
+
+			if (retryCount >= maxRetries) {
+				console.log(
+					`${Date.now()} [cli#runExercise | ${language} / ${exercise}] Failed to launch VS Code after ${maxRetries} attempts`,
+				)
+				return { success: false }
+			}
+
+			// Wait before retrying
+			console.log(`${Date.now()} [cli#runExercise] Waiting before retry attempt ${retryCount + 1}...`)
+			await new Promise((resolve) => setTimeout(resolve, 5_000))
+		}
+	}
+
+	// If we somehow got here without a client, return failure
+	if (!client) {
+		console.log(
+			`${Date.now()} [cli#runExercise | ${language} / ${exercise}] No client available after launch attempts`,
+		)
 		return { success: false }
 	}
 
@@ -307,11 +344,115 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		data: {
 			commandName: TaskCommandName.StartNewTask,
 			data: {
-				configuration: {
-					...rooCodeDefaults,
-					openRouterApiKey: process.env.OPENROUTER_API_KEY!,
-					...run.settings,
-				},
+				configuration: (() => {
+					// 1. Merge defaults and run-specific settings
+					const mergedSettings = { ...rooCodeDefaults, ...(run.settings || {}) }
+					const provider = mergedSettings.apiProvider
+
+					// 2. Identify common keys (adjust this list based on rooCodeDefaults/shared types)
+					const commonKeys = [
+						"modelTemperature",
+						"reasoningEffort",
+						"includeMaxTokens",
+						"terminalOutputLineLimit",
+						"terminalShellIntegrationTimeout",
+						"terminalCommandDelay",
+						"terminalPowershellCounter",
+						"terminalZshClearEolMark",
+						"terminalZshOhMy",
+						"terminalZshP10k",
+						"terminalZdotdir",
+						"terminalShellIntegrationDisabled",
+						"terminalCompressProgressBar",
+						"allowedCommands",
+						"maxReadFileLine",
+						"maxOpenTabsContext",
+						"maxWorkspaceFiles",
+						"rateLimitSeconds",
+						"requestDelaySeconds",
+						"writeDelayMs",
+						"fuzzyMatchThreshold",
+						"autoApprovalEnabled",
+						"alwaysAllowReadOnly",
+						"alwaysAllowReadOnlyOutsideWorkspace",
+						"alwaysAllowWrite",
+						"alwaysAllowWriteOutsideWorkspace",
+						"alwaysAllowBrowser",
+						"alwaysApproveResubmit",
+						"alwaysAllowMcp",
+						"alwaysAllowModeSwitch",
+						"alwaysAllowSubtasks",
+						"alwaysAllowExecute",
+						"diffEnabled",
+						"customModePrompts", // Assuming this structure is common
+						// Add any other common/global settings here
+					]
+
+					// 3. Build the final config object selectively
+					const finalConfig: Record<string, any> = {
+						apiProvider: provider, // Always include the provider
+					}
+
+					// Add common keys found in mergedSettings
+					for (const key of commonKeys) {
+						if (key in mergedSettings) {
+							// Use type assertion to satisfy TypeScript's index signature check
+							finalConfig[key] = (mergedSettings as any)[key]
+						}
+					}
+
+					// Add provider-specific keys
+					switch (provider) {
+						case "openrouter":
+							if (process.env.OPENROUTER_API_KEY) {
+								finalConfig.openRouterApiKey = process.env.OPENROUTER_API_KEY
+							}
+							if ("openRouterModelId" in mergedSettings) {
+								finalConfig.openRouterModelId = mergedSettings.openRouterModelId
+							}
+							if ("openRouterUseMiddleOutTransform" in mergedSettings) {
+								finalConfig.openRouterUseMiddleOutTransform =
+									mergedSettings.openRouterUseMiddleOutTransform
+							}
+							break
+						case "vertex":
+							if ("vertexProjectId" in mergedSettings) {
+								finalConfig.vertexProjectId = mergedSettings.vertexProjectId
+							}
+							if ("vertexRegion" in mergedSettings) {
+								finalConfig.vertexRegion = mergedSettings.vertexRegion
+							}
+							// Vertex uses apiModelId
+							if ("apiModelId" in mergedSettings) {
+								finalConfig.apiModelId = mergedSettings.apiModelId
+							}
+							break
+						// Add cases for other providers (openai, ollama, mistral, etc.)
+						// Example for OpenAI:
+						// case "openai":
+						//   if (process.env.OPENAI_API_KEY) { // Assuming env var name
+						//     finalConfig.openAiApiKey = process.env.OPENAI_API_KEY;
+						//   }
+						//   if ("openAiModelId" in mergedSettings) {
+						//     finalConfig.openAiModelId = mergedSettings.openAiModelId;
+						//   }
+						//   break;
+						default:
+							// Handle providers that use the generic apiModelId
+							if ("apiModelId" in mergedSettings) {
+								finalConfig.apiModelId = mergedSettings.apiModelId
+							}
+							// Add API key logic if needed for default providers
+							break
+					}
+
+					// Add the top-level model field separately (used by web UI, might be redundant but safer to include)
+					if (run.model) {
+						finalConfig.model = run.model
+					}
+
+					return finalConfig
+				})(),
 				text: prompt,
 				newTab: true,
 			},
@@ -337,7 +478,18 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 			await new Promise((resolve) => setTimeout(resolve, 5_000))
 		}
 
-		await updateTask(task.id, { finishedAt: new Date() })
+		// Mark the task as failed explicitly
+		await updateTask(task.id, {
+			finishedAt: new Date(),
+			passed: false, // Explicitly mark as failed
+		})
+
+		// Add error record
+		await createToolError({
+			taskId: task.id,
+			toolName: "execute_command",
+			error: "Task execution timed out",
+		})
 	}
 
 	if (!isClientDisconnected) {
