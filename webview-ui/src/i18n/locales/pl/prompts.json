@@ -39,6 +39,18 @@
 		"description": "Dodaj wytyczne dotyczące zachowania specyficzne dla trybu {{modeName}}.",
 		"loadFromFile": "Niestandardowe instrukcje dla trybu {{modeName}} mogą być również ładowane z folderu <span>.roo/rules-{{modeSlug}}/</span> w Twoim obszarze roboczym (.roorules-{{modeSlug}} i .clinerules-{{modeSlug}} są przestarzałe i wkrótce przestaną działać)."
 	},
+	"rules": {
+		"title": "Reguły specyficzne dla trybu (opcjonalne)",
+		"resetToDefault": "Przywróć domyślne",
+		"description": "Zdefiniuj konkretne reguły lub ograniczenia dotyczące zachowania Roo w trybie {{modeName}}.",
+		"loadFromFile": "Reguły specyficzne dla trybu {{mode}} można również załadować z <span>.roo/rules-{{slug}}/mode_rules.md</span> w Twoim obszarze roboczym."
+	},
+	"objective": {
+		"title": "Cel specyficzny dla trybu (opcjonalne)",
+		"resetToDefault": "Przywróć domyślne",
+		"description": "Jasno określ główny cel lub zadanie Roo podczas działania w trybie {{modeName}}.",
+		"loadFromFile": "Cel specyficzny dla trybu {{mode}} można również załadować z <span>.roo/rules-{{slug}}/mode_objective.md</span> w Twoim obszarze roboczym."
+	},
 	"globalCustomInstructions": {
 		"title": "Niestandardowe instrukcje dla wszystkich trybów",
 		"description": "Te instrukcje dotyczą wszystkich trybów. Zapewniają podstawowy zestaw zachowań, które mogą być rozszerzone przez instrukcje specyficzne dla trybów poniżej.\nJeśli chcesz, aby Roo myślał i mówił w języku innym niż język wyświetlania Twojego edytora ({{language}}), możesz to określić tutaj.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Niestandardowe instrukcje (opcjonalne)",
 			"description": "Dodaj wytyczne dotyczące zachowania specyficzne dla tego trybu."
+		},
+		"rules": {
+			"label": "Reguły (opcjonalne)",
+			"description": "Zdefiniuj konkretne reguły lub ograniczenia dla tego trybu."
+		},
+		"objective": {
+			"label": "Cel (opcjonalne)",
+			"description": "Jasno określ główny cel dla tego trybu."
 		},
 		"buttons": {
 			"cancel": "Anuluj",

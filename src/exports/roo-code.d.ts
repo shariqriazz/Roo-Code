@@ -271,6 +271,8 @@ type GlobalSettings = {
 				name: string
 				roleDefinition: string
 				customInstructions?: string | undefined
+				rules?: string | undefined
+				objective?: string | undefined
 				groups: (
 					| ("read" | "edit" | "browser" | "command" | "mcp" | "modes")
 					| [
@@ -290,6 +292,8 @@ type GlobalSettings = {
 					| {
 							roleDefinition?: string | undefined
 							customInstructions?: string | undefined
+							rules?: string | undefined
+							objective?: string | undefined
 					  }
 					| undefined
 		  }

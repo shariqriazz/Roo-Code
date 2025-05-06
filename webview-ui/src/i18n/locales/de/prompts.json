@@ -39,6 +39,18 @@
 		"description": "Fügen Sie verhaltensspezifische Richtlinien für den Modus {{modeName}} hinzu.",
 		"loadFromFile": "Benutzerdefinierte Anweisungen für den Modus {{mode}} können auch aus dem Ordner <span>.roo/rules-{{slug}}/</span> in deinem Arbeitsbereich geladen werden (.roorules-{{slug}} und .clinerules-{{slug}} sind veraltet und werden bald nicht mehr funktionieren)."
 	},
+	"rules": {
+		"title": "Modusspezifische Regeln (optional)",
+		"resetToDefault": "Auf Standard zurücksetzen",
+		"description": "Definiere spezifische Regeln oder Einschränkungen für Roos Verhalten im {{modeName}}-Modus.",
+		"loadFromFile": "Modusspezifische Regeln für den {{mode}}-Modus können auch aus <span>.roo/rules-{{slug}}/mode_rules.md</span> in deinem Arbeitsbereich geladen werden."
+	},
+	"objective": {
+		"title": "Modusspezifisches Ziel (optional)",
+		"resetToDefault": "Auf Standard zurücksetzen",
+		"description": "Gib klar das Hauptziel oder die Aufgabe für Roo an, wenn es im {{modeName}}-Modus arbeitet.",
+		"loadFromFile": "Das modusspezifische Ziel für den {{mode}}-Modus kann auch aus <span>.roo/rules-{{slug}}/mode_objective.md</span> in deinem Arbeitsbereich geladen werden."
+	},
 	"globalCustomInstructions": {
 		"title": "Benutzerdefinierte Anweisungen für alle Modi",
 		"description": "Diese Anweisungen gelten für alle Modi. Sie bieten einen grundlegenden Satz von Verhaltensweisen, die durch modusspezifische Anweisungen unten erweitert werden können.\nWenn du möchtest, dass Roo in einer anderen Sprache als deiner Editor-Anzeigesprache ({{language}}) denkt und spricht, kannst du das hier angeben.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Benutzerdefinierte Anweisungen (optional)",
 			"description": "Fügen Sie verhaltensspezifische Richtlinien für diesen Modus hinzu."
+		},
+		"rules": {
+			"label": "Regeln (optional)",
+			"description": "Definiere spezifische Regeln oder Einschränkungen für diesen Modus."
+		},
+		"objective": {
+			"label": "Ziel (optional)",
+			"description": "Gib klar das Hauptziel für diesen Modus an."
 		},
 		"buttons": {
 			"cancel": "Abbrechen",

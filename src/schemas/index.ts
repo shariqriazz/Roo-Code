@@ -229,6 +229,8 @@ export const modeConfigSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	roleDefinition: z.string().min(1, "Role definition is required"),
 	customInstructions: z.string().optional(),
+	rules: z.string().optional(),
+	objective: z.string().optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
 })
@@ -268,6 +270,8 @@ export type CustomModesSettings = z.infer<typeof customModesSettingsSchema>
 export const promptComponentSchema = z.object({
 	roleDefinition: z.string().optional(),
 	customInstructions: z.string().optional(),
+	rules: z.string().optional(),
+	objective: z.string().optional(),
 })
 
 export type PromptComponent = z.infer<typeof promptComponentSchema>

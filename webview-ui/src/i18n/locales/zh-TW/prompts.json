@@ -39,6 +39,18 @@
 		"description": "為 {{modeName}} 模式新增專屬的行為指南。",
 		"loadFromFile": "{{mode}} 模式的自訂指令也可以從工作區的 <span>.roo/rules-{{slug}}/</span> 資料夾載入（.roorules-{{slug}} 和 .clinerules-{{slug}} 已棄用並將很快停止運作）。"
 	},
+	"rules": {
+		"title": "模式專屬規則（選用）",
+		"resetToDefault": "重設為預設值",
+		"description": "定義 Roo 在 {{modeName}} 模式下行為的具體規則或限制。",
+		"loadFromFile": "{{mode}} 模式的特定規則也可以從您工作區中的 <span>.roo/rules-{{slug}}/mode_rules.md</span> 載入。"
+	},
+	"objective": {
+		"title": "模式專屬目標（選用）",
+		"resetToDefault": "重設為預設值",
+		"description": "清楚說明 Roo 在 {{modeName}} 模式下操作時的主要目標或目的。",
+		"loadFromFile": "{{mode}} 模式的特定目標也可以从您工作区中的 <span>.roo/rules-{{slug}}/mode_objective.md</span> 载入。"
+	},
 	"globalCustomInstructions": {
 		"title": "所有模式的自訂指令",
 		"description": "這些指令適用於所有模式。它們提供了一組基本行為，可以透過下方的模式專屬自訂指令來強化。\n如果您希望 Roo 使用與編輯器顯示語言 ({{language}}) 不同的語言來思考和對話，您可以在這裡指定。",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "自訂指令（選用）",
 			"description": "為此模式新增特定的行為指南。"
+		},
+		"rules": {
+			"label": "規則（選用）",
+			"description": "定義此模式的具體規則或限制。"
+		},
+		"objective": {
+			"label": "目標（選用）",
+			"description": "清楚說明此模式的主要目標。"
 		},
 		"buttons": {
 			"cancel": "取消",

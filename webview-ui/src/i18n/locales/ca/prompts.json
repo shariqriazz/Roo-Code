@@ -39,6 +39,18 @@
 		"description": "Afegiu directrius de comportament específiques per al mode {{modeName}}.",
 		"loadFromFile": "Les instruccions personalitzades específiques per al mode {{mode}} també es poden carregar des de la carpeta <span>.roo/rules-{{slug}}/</span> al vostre espai de treball (.roorules-{{slug}} i .clinerules-{{slug}} estan obsolets i deixaran de funcionar aviat)."
 	},
+	"rules": {
+		"title": "Regles específiques del mode (opcional)",
+		"resetToDefault": "Restablir a valors predeterminats",
+		"description": "Definiu regles o restriccions específiques per al comportament de Roo en el mode {{modeName}}.",
+		"loadFromFile": "Les regles específiques del mode {{mode}} també es poden carregar des de <span>.roo/rules-{{slug}}/mode_rules.md</span> al vostre espai de treball."
+	},
+	"objective": {
+		"title": "Objectiu específic del mode (opcional)",
+		"resetToDefault": "Restablir a valors predeterminats",
+		"description": "Indiqueu clarament l'objectiu principal o la finalitat de Roo quan operi en el mode {{modeName}}.",
+		"loadFromFile": "L'objectiu específic del mode {{mode}} també es pot carregar des de <span>.roo/rules-{{slug}}/mode_objective.md</span> al vostre espai de treball."
+	},
 	"globalCustomInstructions": {
 		"title": "Instruccions personalitzades per a tots els modes",
 		"description": "Aquestes instruccions s'apliquen a tots els modes. Proporcionen un conjunt bàsic de comportaments que es poden millorar amb instruccions específiques de cada mode a continuació.\nSi voleu que Roo pensi i parli en un idioma diferent al de la visualització del vostre editor ({{language}}), podeu especificar-ho aquí.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Instruccions personalitzades (opcional)",
 			"description": "Afegiu directrius de comportament específiques per a aquest mode."
+		},
+		"rules": {
+			"label": "Regles (opcional)",
+			"description": "Definiu regles o restriccions específiques per a aquest mode."
+		},
+		"objective": {
+			"label": "Objectiu (opcional)",
+			"description": "Indiqueu clarament l'objectiu principal per a aquest mode."
 		},
 		"buttons": {
 			"cancel": "Cancel·lar",

@@ -68,6 +68,17 @@ export class CustomModesManager {
 		return exists ? roomodesPath : undefined
 	}
 
+	private async readFileContent(filePath: string): Promise<string | undefined> {
+		try {
+			if (await fileExistsAtPath(filePath)) {
+				return await fs.readFile(filePath, "utf-8")
+			}
+		} catch (error) {
+			logger.warn(`Failed to read file content from ${filePath}`, { error })
+		}
+		return undefined
+	}
+
 	private async loadModesFromFile(filePath: string): Promise<ModeConfig[]> {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
@@ -82,7 +93,32 @@ export class CustomModesManager {
 			const source = isRoomodes ? ("project" as const) : ("global" as const)
 
 			// Add source to each mode
-			return result.data.customModes.map((mode) => ({ ...mode, source }))
+			const modesWithSource = result.data.customModes.map((mode) => ({ ...mode, source }))
+
+			// Apply file overrides for rules and objective
+			const workspaceRoot = getWorkspacePath()
+			if (workspaceRoot) {
+				for (const mode of modesWithSource) {
+					const rulesFilePath = path.join(workspaceRoot, ".roo", `rules-${mode.slug}`, "mode_rules.md")
+					const objectiveFilePath = path.join(
+						workspaceRoot,
+						".roo",
+						`rules-${mode.slug}`,
+						"mode_objective.md",
+					)
+
+					const rulesContent = await this.readFileContent(rulesFilePath)
+					if (rulesContent !== undefined) {
+						mode.rules = rulesContent.trim()
+					}
+
+					const objectiveContent = await this.readFileContent(objectiveFilePath)
+					if (objectiveContent !== undefined) {
+						mode.objective = objectiveContent.trim()
+					}
+				}
+			}
+			return modesWithSource
 		} catch (error) {
 			const errorMsg = `Failed to load modes from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
 			console.error(`[CustomModesManager] ${errorMsg}`)

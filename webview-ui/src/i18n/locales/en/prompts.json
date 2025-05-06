@@ -39,6 +39,18 @@
 		"description": "Add behavioral guidelines specific to {{modeName}} mode.",
 		"loadFromFile": "Custom instructions specific to {{mode}} mode can also be loaded from the <span>.roo/rules-{{slug}}/</span> folder in your workspace (.roorules-{{slug}} and .clinerules-{{slug}} are deprecated and will stop working soon)."
 	},
+	"rules": {
+		"title": "Mode-specific Rules (optional)",
+		"resetToDefault": "Reset to default",
+		"description": "Define specific rules or constraints for Roo's behavior in {{modeName}} mode.",
+		"loadFromFile": "Mode-specific rules for {{mode}} mode can also be loaded from <span>.roo/rules-{{slug}}/mode_rules.md</span> in your workspace."
+	},
+	"objective": {
+		"title": "Mode-specific Objective (optional)",
+		"resetToDefault": "Reset to default",
+		"description": "Clearly state the primary objective or goal for Roo when operating in {{modeName}} mode.",
+		"loadFromFile": "The mode-specific objective for {{mode}} mode can also be loaded from <span>.roo/rules-{{slug}}/mode_objective.md</span> in your workspace."
+	},
 	"globalCustomInstructions": {
 		"title": "Custom Instructions for All Modes",
 		"description": "These instructions apply to all modes. They provide a base set of behaviors that can be enhanced by mode-specific instructions below.\nIf you would like Roo to think and speak in a different language than your editor display language ({{language}}), you can specify it here.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Custom Instructions (optional)",
 			"description": "Add behavioral guidelines specific to this mode."
+		},
+		"rules": {
+			"label": "Rules (optional)",
+			"description": "Define specific rules or constraints for this mode."
+		},
+		"objective": {
+			"label": "Objective (optional)",
+			"description": "Clearly state the primary objective for this mode."
 		},
 		"buttons": {
 			"cancel": "Cancel",

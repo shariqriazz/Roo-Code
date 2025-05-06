@@ -21,6 +21,7 @@ const mockExtensionState = {
 	mode: "code",
 	customInstructions: "Initial instructions",
 	setCustomInstructions: jest.fn(),
+	customModes: [], // Add customModes to mockExtensionState
 }
 
 const renderPromptsView = (props = {}) => {
@@ -193,6 +194,216 @@ describe("PromptsView", () => {
 		expect(vscode.postMessage).toHaveBeenCalledWith({
 			type: "customInstructions",
 			text: undefined,
+		})
+	})
+
+	// Test for Rules section
+	it("handles rules changes correctly for built-in mode", async () => {
+		renderPromptsView({ mode: "code", customModePrompts: { code: { rules: "Initial rules" } } })
+		const textarea = await screen.findByTestId("code-rules-textarea")
+		expect(textarea).toHaveValue("Initial rules")
+		fireEvent.change(textarea, { target: { value: "New rules value" } })
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "code",
+			customPrompt: { rules: "New rules value" },
+		})
+	})
+
+	it("handles rules changes correctly for custom mode", async () => {
+		const customMode = {
+			slug: "custom-test",
+			name: "Custom Test",
+			roleDefinition: "Custom role",
+			rules: "Initial custom rules",
+			groups: [],
+			source: "global",
+		}
+		renderPromptsView({ mode: "custom-test", customModes: [customMode] })
+		const textarea = await screen.findByTestId("custom-test-rules-textarea")
+		expect(textarea).toHaveValue("Initial custom rules")
+		fireEvent.change(textarea, { target: { value: "New custom rules value" } })
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updateCustomMode",
+			slug: "custom-test",
+			modeConfig: { ...customMode, rules: "New custom rules value" },
+		})
+	})
+
+	it("resets rules only for built-in modes", async () => {
+		const customMode = { slug: "custom-r", name: "Custom R", roleDefinition: "Def", groups: [] }
+		const { unmount, rerender } = renderPromptsView({
+			mode: "code",
+			customModes: [customMode],
+			customModePrompts: { code: { rules: "User rules" } },
+		})
+		const resetButton = screen.getByTestId("code-rules-reset")
+		expect(resetButton).toBeInTheDocument()
+		fireEvent.click(resetButton)
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "code",
+			customPrompt: { rules: undefined },
+		})
+		unmount()
+
+		// Switch to custom mode
+		rerender(
+			<ExtensionStateContext.Provider
+				value={{ ...mockExtensionState, mode: "custom-r", customModes: [customMode] } as any}>
+				<PromptsView onDone={jest.fn()} />
+			</ExtensionStateContext.Provider>,
+		)
+		expect(screen.queryByTestId("custom-r-rules-reset")).not.toBeInTheDocument()
+	})
+
+	it('triggers openFile for rules "Load from file" link', async () => {
+		renderPromptsView({ mode: "code" })
+		const loadFromFileLink = screen.getByText(/Mode-specific rules for Code mode can also be loaded from/i)
+		const spanElement = loadFromFileLink.querySelector("span") // Find the clickable span
+		expect(spanElement).toBeInTheDocument()
+		if (spanElement) fireEvent.click(spanElement)
+
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "openFile",
+			text: "./.roo/rules-code/mode_rules.md",
+			values: { create: true, content: "" },
+		})
+	})
+
+	// Test for Objective section
+	it("handles objective changes correctly for built-in mode", async () => {
+		renderPromptsView({ mode: "ask", customModePrompts: { ask: { objective: "Initial objective" } } })
+		const textarea = await screen.findByTestId("ask-objective-textarea")
+		expect(textarea).toHaveValue("Initial objective")
+		fireEvent.change(textarea, { target: { value: "New objective value" } })
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "ask",
+			customPrompt: { objective: "New objective value" },
+		})
+	})
+
+	it("handles objective changes correctly for custom mode", async () => {
+		const customMode = {
+			slug: "custom-obj",
+			name: "Custom Obj",
+			roleDefinition: "Custom role obj",
+			objective: "Initial custom objective",
+			groups: [],
+			source: "global",
+		}
+		renderPromptsView({ mode: "custom-obj", customModes: [customMode] })
+		const textarea = await screen.findByTestId("custom-obj-objective-textarea")
+		expect(textarea).toHaveValue("Initial custom objective")
+		fireEvent.change(textarea, { target: { value: "New custom objective value" } })
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updateCustomMode",
+			slug: "custom-obj",
+			modeConfig: { ...customMode, objective: "New custom objective value" },
+		})
+	})
+
+	it("resets objective only for built-in modes", async () => {
+		const customMode = { slug: "custom-o", name: "Custom O", roleDefinition: "Def", groups: [] }
+		const { unmount, rerender } = renderPromptsView({
+			mode: "ask",
+			customModes: [customMode],
+			customModePrompts: { ask: { objective: "User objective" } },
+		})
+		const resetButton = screen.getByTestId("ask-objective-reset")
+		expect(resetButton).toBeInTheDocument()
+		fireEvent.click(resetButton)
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "updatePrompt",
+			promptMode: "ask",
+			customPrompt: { objective: undefined },
+		})
+		unmount()
+
+		rerender(
+			<ExtensionStateContext.Provider
+				value={{ ...mockExtensionState, mode: "custom-o", customModes: [customMode] } as any}>
+				<PromptsView onDone={jest.fn()} />
+			</ExtensionStateContext.Provider>,
+		)
+		expect(screen.queryByTestId("custom-o-objective-reset")).not.toBeInTheDocument()
+	})
+
+	it('triggers openFile for objective "Load from file" link', async () => {
+		renderPromptsView({ mode: "ask" })
+		const loadFromFileLink = screen.getByText(/The mode-specific objective for Ask mode can also be loaded from/i)
+		const spanElement = loadFromFileLink.querySelector("span")
+		expect(spanElement).toBeInTheDocument()
+		if (spanElement) fireEvent.click(spanElement)
+
+		expect(vscode.postMessage).toHaveBeenCalledWith({
+			type: "openFile",
+			text: "./.roo/rules-ask/mode_objective.md",
+			values: { create: true, content: "" },
+		})
+	})
+
+	describe("Create New Mode Dialog", () => {
+		it("includes rules and objective fields and sends them on create", async () => {
+			renderPromptsView()
+			const createButton = screen.getByTitle("Create new mode")
+			fireEvent.click(createButton)
+
+			// Wait for dialog to appear
+			const nameInput = await screen.findByText("Name", { selector: "div > div" }) // More specific selector
+			expect(nameInput).toBeInTheDocument()
+
+			// Fill out the form
+			const dialogNameInput = nameInput.parentElement?.querySelector("vscode-text-field")
+			const dialogSlugInput = screen
+				.getByText("Slug", { selector: "div > div" })
+				.parentElement?.querySelector("vscode-text-field")
+			const dialogRoleTextarea = screen
+				.getByText("Role Definition", { selector: "div > div" })
+				.parentElement?.querySelector("vscode-textarea")
+			const dialogRulesTextarea = screen
+				.getByText("Rules (optional)", { selector: "div > div" })
+				.parentElement?.querySelector("vscode-textarea")
+			const dialogObjectiveTextarea = screen
+				.getByText("Objective (optional)", { selector: "div > div" })
+				.parentElement?.querySelector("vscode-textarea")
+			const dialogCreateButton = screen.getByText("Create Mode", { selector: "vscode-button" })
+
+			if (
+				dialogNameInput &&
+				dialogSlugInput &&
+				dialogRoleTextarea &&
+				dialogRulesTextarea &&
+				dialogObjectiveTextarea
+			) {
+				fireEvent.input(dialogNameInput, { target: { value: "My Test Mode" } })
+				// Slug should auto-populate, but we can also set it if needed
+				// fireEvent.input(dialogSlugInput, { target: { value: "my-test-mode" } });
+				fireEvent.input(dialogRoleTextarea, { target: { value: "Test Role Def" } })
+				fireEvent.input(dialogRulesTextarea, { target: { value: "Test Rules" } })
+				fireEvent.input(dialogObjectiveTextarea, { target: { value: "Test Objective" } })
+			} else {
+				throw new Error("Could not find all dialog input fields")
+			}
+
+			fireEvent.click(dialogCreateButton)
+
+			await waitFor(() => {
+				expect(vscode.postMessage).toHaveBeenCalledWith(
+					expect.objectContaining({
+						type: "updateCustomMode",
+						slug: "my-test-mode", // or whatever slug is generated
+						modeConfig: expect.objectContaining({
+							name: "My Test Mode",
+							roleDefinition: "Test Role Def",
+							rules: "Test Rules",
+							objective: "Test Objective",
+							source: "global", // default source
+						}),
+					}),
+				)
+			})
 		})
 	})
 })

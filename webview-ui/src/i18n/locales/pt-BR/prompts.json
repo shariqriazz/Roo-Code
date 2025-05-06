@@ -39,6 +39,18 @@
 		"description": "Adicione diretrizes comportamentais específicas para o modo {{modeName}}.",
 		"loadFromFile": "Instruções personalizadas específicas para o modo {{modeName}} também podem ser carregadas da pasta <span>.roo/rules-{{modeSlug}}/</span> no seu espaço de trabalho (.roorules-{{modeSlug}} e .clinerules-{{modeSlug}} estão obsoletos e deixarão de funcionar em breve)."
 	},
+	"rules": {
+		"title": "Regras Específicas do Modo (opcional)",
+		"resetToDefault": "Restaurar para padrão",
+		"description": "Defina regras ou restrições específicas para o comportamento do Roo no modo {{modeName}}.",
+		"loadFromFile": "Regras específicas do modo {{mode}} também podem ser carregadas de <span>.roo/rules-{{slug}}/mode_rules.md</span> em seu espaço de trabalho."
+	},
+	"objective": {
+		"title": "Objetivo Específico do Modo (opcional)",
+		"resetToDefault": "Restaurar para padrão",
+		"description": "Declare claramente o objetivo ou meta principal para o Roo ao operar no modo {{modeName}}.",
+		"loadFromFile": "O objetivo específico do modo {{mode}} também pode ser carregado de <span>.roo/rules-{{slug}}/mode_objective.md</span> em seu espaço de trabalho."
+	},
 	"globalCustomInstructions": {
 		"title": "Instruções personalizadas para todos os modos",
 		"description": "Estas instruções se aplicam a todos os modos. Elas fornecem um conjunto base de comportamentos que podem ser aprimorados por instruções específicas do modo abaixo.\nSe você desejar que o Roo pense e fale em um idioma diferente do idioma de exibição do seu editor ({{language}}), você pode especificá-lo aqui.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Instruções personalizadas (opcional)",
 			"description": "Adicione diretrizes comportamentais específicas para este modo."
+		},
+		"rules": {
+			"label": "Regras (opcional)",
+			"description": "Defina regras ou restrições específicas para este modo."
+		},
+		"objective": {
+			"label": "Objetivo (opcional)",
+			"description": "Declare claramente o objetivo principal para este modo."
 		},
 		"buttons": {
 			"cancel": "Cancelar",

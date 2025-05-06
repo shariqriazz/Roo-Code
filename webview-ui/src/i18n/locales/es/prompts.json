@@ -39,6 +39,18 @@
 		"description": "Agrega directrices de comportamiento específicas para el modo {{modeName}}.",
 		"loadFromFile": "Las instrucciones personalizadas para el modo {{mode}} también se pueden cargar desde la carpeta <span>.roo/rules-{{slug}}/</span> en tu espacio de trabajo (.roorules-{{slug}} y .clinerules-{{slug}} están obsoletos y dejarán de funcionar pronto)."
 	},
+	"rules": {
+		"title": "Reglas específicas del modo (opcional)",
+		"resetToDefault": "Restablecer a valores predeterminados",
+		"description": "Define reglas o restricciones específicas para el comportamiento de Roo en el modo {{modeName}}.",
+		"loadFromFile": "Las reglas específicas del modo {{mode}} también se pueden cargar desde <span>.roo/rules-{{slug}}/mode_rules.md</span> en tu espacio de trabajo."
+	},
+	"objective": {
+		"title": "Objetivo específico del modo (opcional)",
+		"resetToDefault": "Restablecer a valores predeterminados",
+		"description": "Establece claramente el objetivo o meta principal para Roo cuando opera en el modo {{modeName}}.",
+		"loadFromFile": "El objetivo específico del modo {{mode}} también se puede cargar desde <span>.roo/rules-{{slug}}/mode_objective.md</span> en tu espacio de trabajo."
+	},
 	"globalCustomInstructions": {
 		"title": "Instrucciones personalizadas para todos los modos",
 		"description": "Estas instrucciones se aplican a todos los modos. Proporcionan un conjunto base de comportamientos que pueden ser mejorados por instrucciones específicas de cada modo.\nSi quieres que Roo piense y hable en un idioma diferente al idioma de visualización de tu editor ({{language}}), puedes especificarlo aquí.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Instrucciones personalizadas (opcional)",
 			"description": "Agrega directrices de comportamiento específicas para este modo."
+		},
+		"rules": {
+			"label": "Reglas (opcional)",
+			"description": "Define reglas o restricciones específicas para este modo."
+		},
+		"objective": {
+			"label": "Objetivo (opcional)",
+			"description": "Establece claramente el objetivo principal para este modo."
 		},
 		"buttons": {
 			"cancel": "Cancelar",

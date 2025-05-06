@@ -31,22 +31,34 @@
 	"roleDefinition": {
 		"title": "角色定义",
 		"resetToDefault": "重置为默认值",
-		"description": "设定专业领域和应答风格"
+		"description": "定义 Roo 在此模式下的专业领域和个性。此描述将影响 Roo 如何展示自己以及处理任务。"
 	},
 	"customInstructions": {
 		"title": "模式专属规则（可选）",
 		"resetToDefault": "重置为默认值",
 		"description": "{{modeName}}模式的专属规则",
-		"loadFromFile": "支持从<span>.roo/rules-{{slug}}/</span>目录读取配置（.roorules-{{slug}}和.clinerules-{{slug}}已弃用并将很快停止工作）。"
+		"loadFromFile": "针对 {{mode}} 模式的自定义指令也可以从您工作区中的 <span>.roo/rules-{{slug}}/</span> 文件夹加载（.roorules-{{slug}} 和 .clinerules-{{slug}} 已弃用，将很快停止工作）。"
+	},
+	"rules": {
+		"title": "模式专属规则（可选）",
+		"resetToDefault": "重置为默认值",
+		"description": "定义 Roo 在 {{modeName}} 模式下行为的具体规则或约束。",
+		"loadFromFile": "{{mode}} 模式的特定规则也可以从您工作区中的 <span>.roo/rules-{{slug}}/mode_rules.md</span> 加载。"
+	},
+	"objective": {
+		"title": "模式专属目标（可选）",
+		"resetToDefault": "重置为默认值",
+		"description": "清晰说明 Roo 在 {{modeName}} 模式下操作时的主要目标或目的。",
+		"loadFromFile": "{{mode}} 模式的特定目标也可以从您工作区中的 <span>.roo/rules-{{slug}}/mode_objective.md</span> 加载。"
 	},
 	"globalCustomInstructions": {
 		"title": "所有模式的自定义指令",
-		"description": "所有模式通用规则\n当前语言：{{language}}",
-		"loadFromFile": "支持从<span>.roo/rules/</span>目录读取全局配置（.roorules和.clinerules已弃用并将很快停止工作）。"
+		"description": "这些指令适用于所有模式。它们提供了一套基础行为，可以通过下面的模式特定指令进行增强。\n如果您希望 Roo 使用与编辑器显示语言（{{language}}）不同的语言进行思考和交流，可以在此处指定。",
+		"loadFromFile": "指令也可以从您工作区中的 <span>.roo/rules/</span> 文件夹加载（.roorules 和 .clinerules 已弃用，将很快停止工作）。"
 	},
 	"systemPrompt": {
 		"preview": "预览系统提示词",
-		"copy": "复制系统提示词",
+		"copy": "复制系统提示词到剪贴板",
 		"title": "系统提示词（{{modeName}}模式）"
 	},
 	"supportPrompts": {
@@ -55,39 +67,39 @@
 		"prompt": "提示词",
 		"enhance": {
 			"apiConfiguration": "API配置",
-			"apiConfigDescription": "您可以选择一个固定的API配置用于增强提示词，或者使用当前选择的配置",
+			"apiConfigDescription": "您可以选择一个 API 配置以始终用于增强提示词，或者仅使用当前选定的配置。",
 			"useCurrentConfig": "使用当前选择的API配置",
 			"testPromptPlaceholder": "输入提示词以测试增强效果",
-			"previewButton": "测试提示词增强"
+			"previewButton": "预览提示词增强"
 		},
 		"types": {
 			"ENHANCE": {
 				"label": "增强提示词",
-				"description": "优化提示获取更好回答（点击✨使用）"
+				"description": "使用提示词增强功能，为您的输入获取量身定制的建议或改进。这能确保 Roo 理解您的意图并提供最佳回应。可通过聊天中的 ✨ 图标使用。"
 			},
 			"EXPLAIN": {
 				"label": "解释代码",
-				"description": "解读代码逻辑（支持文件/片段），可在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选中的代码）中使用。"
+				"description": "获取代码片段、函数或整个文件的详细解释。有助于理解复杂代码或学习新模式。可在代码操作（编辑器中的灯泡图标）和编辑器右键菜单（右键点击选中的代码）中使用。"
 			},
 			"FIX": {
 				"label": "修复问题",
-				"description": "查找修复代码问题，可在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选中的代码）中使用。"
+				"description": "获取帮助以识别和解决错误、缺陷或代码质量问题。提供分步指导以修复问题。可在代码操作（编辑器中的灯泡图标）和编辑器右键菜单（右键点击选中的代码）中使用。"
 			},
 			"IMPROVE": {
 				"label": "改进代码",
-				"description": "提供优化建议（保留原功能），可在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选中的代码）中使用。"
+				"description": "在保持功能的同时，接收有关代码优化、更佳实践和架构改进的建议。可在代码操作（编辑器中的灯泡图标）和编辑器右键菜单（右键点击选中的代码）中使用。"
 			},
 			"ADD_TO_CONTEXT": {
 				"label": "添加到上下文",
-				"description": "添加额外信息到对话，可在代码操作（编辑器中的灯泡图标）和编辑器上下文菜单（右键点击选中的代码）中使用。"
+				"description": "向您当前的工作或对话添加上下文。有助于提供额外信息或澄清。可在代码操作（编辑器中的灯泡图标）和编辑器右键菜单（右键点击选中的代码）中使用。"
 			},
 			"TERMINAL_ADD_TO_CONTEXT": {
 				"label": "添加终端内容到上下文",
-				"description": "将终端输出内容加入对话。可在终端右键菜单（右键点击选中的终端内容）中使用。"
+				"description": "将终端输出添加到您当前的工作或对话中。有助于提供命令输出或日志。可在终端右键菜单（右键点击选中的终端内容）中使用。"
 			},
 			"TERMINAL_FIX": {
 				"label": "修复终端命令",
-				"description": "修复终端命令问题。可在终端右键菜单（右键点击选中的终端内容）中使用。"
+				"description": "获取帮助以修复失败或需要改进的终端命令。可在终端右键菜单（右键点击选中的终端内容）中使用。"
 			},
 			"TERMINAL_EXPLAIN": {
 				"label": "解释终端命令",
@@ -95,7 +107,7 @@
 			},
 			"NEW_TASK": {
 				"label": "新任务",
-				"description": "控制开始新任务时的用户提示词。可在首页对话框中使用。"
+				"description": "通过用户输入开始一个新任务。可在命令面板中使用。"
 			}
 		}
 	},
@@ -112,31 +124,39 @@
 		},
 		"slug": {
 			"label": "标识符",
-			"description": "英文标识符（小写字母+数字+短横线）"
+			"description": "此标识符用于 URL 和文件名。应为小写，且仅包含字母、数字和短横线。"
 		},
 		"saveLocation": {
 			"label": "保存位置",
-			"description": "配置存储位置（当前项目配置优先）",
+			"description": "选择此模式的保存位置。项目特定模式优先于全局模式。",
 			"global": {
 				"label": "全局",
-				"description": "全局可用"
+				"description": "在所有工作区中可用"
 			},
 			"project": {
 				"label": "项目特定 (.roomodes)",
-				"description": "仅当前项目有效"
+				"description": "仅在此工作区中可用，优先于全局模式"
 			}
 		},
 		"roleDefinition": {
 			"label": "角色定义",
-			"description": "设定专业方向"
+			"description": "定义 Roo 在此模式下的专业领域和个性。"
 		},
 		"tools": {
 			"label": "可用工具",
-			"description": "选择可用工具"
+			"description": "选择此模式可以使用的工具。"
 		},
 		"customInstructions": {
 			"label": "自定义指令（可选）",
-			"description": "设置专属规则"
+			"description": "添加此模式特定的行为指南。"
+		},
+		"rules": {
+			"label": "规则（可选）",
+			"description": "定义此模式的特定规则或约束。"
+		},
+		"objective": {
+			"label": "目标（可选）",
+			"description": "清晰说明此模式的主要目标。"
 		},
 		"buttons": {
 			"cancel": "取消",

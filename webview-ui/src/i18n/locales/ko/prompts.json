@@ -39,6 +39,18 @@
 		"description": "{{modeName}} 모드에 대한 특정 행동 지침을 추가하세요.",
 		"loadFromFile": "{{mode}} 모드에 대한 사용자 지정 지침은 작업 공간의 <span>.roo/rules-{{slug}}/</span> 폴더에서도 로드할 수 있습니다(.roorules-{{slug}}와 .clinerules-{{slug}}는 더 이상 사용되지 않으며 곧 작동을 중단합니다)."
 	},
+	"rules": {
+		"title": "모드별 규칙 (선택 사항)",
+		"resetToDefault": "기본값으로 재설정",
+		"description": "{{modeName}} 모드에서 Roo의 행동에 대한 특정 규칙이나 제약 조건을 정의합니다.",
+		"loadFromFile": "{{mode}} 모드별 규칙은 작업 공간의 <span>.roo/rules-{{slug}}/mode_rules.md</span>에서도 로드할 수 있습니다."
+	},
+	"objective": {
+		"title": "모드별 목표 (선택 사항)",
+		"resetToDefault": "기본값으로 재설정",
+		"description": "{{modeName}} 모드에서 작동할 때 Roo의 주요 목표나 목적을 명확하게 기술합니다.",
+		"loadFromFile": "{{mode}} 모드별 목표는 작업 공간의 <span>.roo/rules-{{slug}}/mode_objective.md</span>에서도 로드할 수 있습니다."
+	},
 	"globalCustomInstructions": {
 		"title": "모든 모드에 대한 사용자 지정 지침",
 		"description": "이 지침은 모든 모드에 적용됩니다. 아래의 모드별 지침으로 향상될 수 있는 기본 동작 세트를 제공합니다.\nRoo가 에디터 표시 언어({{language}})와 다른 언어로 생각하고 말하기를 원하시면, 여기에 지정할 수 있습니다.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "사용자 지정 지침 (선택 사항)",
 			"description": "이 모드에 대한 특정 행동 지침을 추가하세요."
+		},
+		"rules": {
+			"label": "규칙 (선택 사항)",
+			"description": "이 모드에 대한 특정 규칙이나 제약 조건을 정의합니다."
+		},
+		"objective": {
+			"label": "목표 (선택 사항)",
+			"description": "이 모드의 주요 목표를 명확하게 기술합니다."
 		},
 		"buttons": {
 			"cancel": "취소",

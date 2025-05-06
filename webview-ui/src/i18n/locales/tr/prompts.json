@@ -39,6 +39,18 @@
 		"description": "{{modeName}} modu için özel davranış yönergeleri ekleyin.",
 		"loadFromFile": "{{mode}} moduna özgü özel talimatlar ayrıca çalışma alanınızdaki <span>.roo/rules-{{slug}}/</span> klasöründen yüklenebilir (.roorules-{{slug}} ve .clinerules-{{slug}} kullanımdan kaldırılmıştır ve yakında çalışmayı durduracaklardır)."
 	},
+	"rules": {
+		"title": "Moda Özgü Kurallar (isteğe bağlı)",
+		"resetToDefault": "Varsayılana sıfırla",
+		"description": "{{modeName}} modunda Roo'nun davranışı için belirli kuralları veya kısıtlamaları tanımlayın.",
+		"loadFromFile": "{{mode}} modu için moda özgü kurallar çalışma alanınızdaki <span>.roo/rules-{{slug}}/mode_rules.md</span> dosyasından da yüklenebilir."
+	},
+	"objective": {
+		"title": "Moda Özgü Amaç (isteğe bağlı)",
+		"resetToDefault": "Varsayılana sıfırla",
+		"description": "{{modeName}} modunda çalışırken Roo'nun birincil amacını veya hedefini açıkça belirtin.",
+		"loadFromFile": "{{mode}} modu için moda özgü amaç çalışma alanınızdaki <span>.roo/rules-{{slug}}/mode_objective.md</span> dosyasından da yüklenebilir."
+	},
 	"globalCustomInstructions": {
 		"title": "Tüm Modlar için Özel Talimatlar",
 		"description": "Bu talimatlar tüm modlara uygulanır. Aşağıdaki moda özgü talimatlarla geliştirilebilen temel davranış seti sağlarlar.\nRoo'nun editörünüzün görüntüleme dilinden ({{language}}) farklı bir dilde düşünmesini ve konuşmasını istiyorsanız, burada belirtebilirsiniz.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Özel Talimatlar (isteğe bağlı)",
 			"description": "Bu mod için özel davranış yönergeleri ekleyin."
+		},
+		"rules": {
+			"label": "Kurallar (isteğe bağlı)",
+			"description": "Bu mod için belirli kuralları veya kısıtlamaları tanımlayın."
+		},
+		"objective": {
+			"label": "Amaç (isteğe bağlı)",
+			"description": "Bu mod için birincil amacı açıkça belirtin."
 		},
 		"buttons": {
 			"cancel": "İptal",

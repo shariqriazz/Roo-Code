@@ -39,6 +39,18 @@
 		"description": "Aggiungi linee guida comportamentali specifiche per la modalità {{modeName}}.",
 		"loadFromFile": "Le istruzioni personalizzate specifiche per la modalità {{mode}} possono essere caricate anche dalla cartella <span>.roo/rules-{{slug}}/</span> nel tuo spazio di lavoro (.roorules-{{slug}} e .clinerules-{{slug}} sono obsoleti e smetteranno di funzionare presto)."
 	},
+	"rules": {
+		"title": "Regole specifiche della modalità (opzionale)",
+		"resetToDefault": "Ripristina predefiniti",
+		"description": "Definisci regole o vincoli specifici per il comportamento di Roo in modalità {{modeName}}.",
+		"loadFromFile": "Le regole specifiche della modalità {{mode}} possono anche essere caricate da <span>.roo/rules-{{slug}}/mode_rules.md</span> nel tuo spazio di lavoro."
+	},
+	"objective": {
+		"title": "Obiettivo specifico della modalità (opzionale)",
+		"resetToDefault": "Ripristina predefiniti",
+		"description": "Indica chiaramente l'obiettivo o lo scopo principale di Roo quando opera in modalità {{modeName}}.",
+		"loadFromFile": "L'obiettivo specifico della modalità {{mode}} può anche essere caricato da <span>.roo/rules-{{slug}}/mode_objective.md</span> nel tuo spazio di lavoro."
+	},
 	"globalCustomInstructions": {
 		"title": "Istruzioni personalizzate per tutte le modalità",
 		"description": "Queste istruzioni si applicano a tutte le modalità. Forniscono un insieme base di comportamenti che possono essere migliorati dalle istruzioni specifiche per modalità qui sotto.\nSe desideri che Roo pensi e parli in una lingua diversa dalla lingua di visualizzazione del tuo editor ({{language}}), puoi specificarlo qui.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Istruzioni personalizzate (opzionale)",
 			"description": "Aggiungi linee guida comportamentali specifiche per questa modalità."
+		},
+		"rules": {
+			"label": "Regole (opzionale)",
+			"description": "Definisci regole o vincoli specifici per questa modalità."
+		},
+		"objective": {
+			"label": "Obiettivo (opzionale)",
+			"description": "Indica chiaramente l'obiettivo principale per questa modalità."
 		},
 		"buttons": {
 			"cancel": "Annulla",

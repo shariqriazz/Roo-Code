@@ -16,6 +16,8 @@ import {
 	PromptComponent,
 	getRoleDefinition,
 	getCustomInstructions,
+	getRules,
+	getObjective,
 	getAllModes,
 	ModeConfig,
 	GroupEntry,
@@ -168,6 +170,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
 	const [newModeGroups, setNewModeGroups] = useState<GroupEntry[]>(availableGroups)
 	const [newModeSource, setNewModeSource] = useState<ModeSource>("global")
+	const [newModeRules, setNewModeRules] = useState("")
+	const [newModeObjective, setNewModeObjective] = useState("")
 
 	// Field-specific error states
 	const [nameError, setNameError] = useState<string>("")
@@ -183,6 +187,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		setNewModeGroups(availableGroups)
 		setNewModeRoleDefinition("")
 		setNewModeCustomInstructions("")
+		setNewModeRules("")
+		setNewModeObjective("")
 		setNewModeSource("global")
 		// Reset error states
 		setNameError("")
@@ -229,6 +235,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 			name: newModeName,
 			roleDefinition: newModeRoleDefinition.trim(),
 			customInstructions: newModeCustomInstructions.trim() || undefined,
+			rules: newModeRules.trim() || undefined,
+			objective: newModeObjective.trim() || undefined,
 			groups: newModeGroups,
 			source,
 		}
@@ -270,6 +278,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		newModeSlug,
 		newModeRoleDefinition,
 		newModeCustomInstructions,
+		newModeRules,
+		newModeObjective,
 		newModeGroups,
 		newModeSource,
 		updateCustomMode,
@@ -366,7 +376,10 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		})
 	}
 
-	const handleAgentReset = (modeSlug: string, type: "roleDefinition" | "customInstructions") => {
+	const handleAgentReset = (
+		modeSlug: string,
+		type: "roleDefinition" | "customInstructions" | "rules" | "objective",
+	) => {
 		// Only reset for built-in modes
 		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
 		const updatedPrompt = { ...existingPrompt }
@@ -831,6 +844,206 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								}}
 							/>
 						</div>
+					</div>
+				</div>
+
+				{/* Rules Section */}
+				<div style={{ marginBottom: "8px" }}>
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+							marginBottom: "4px",
+						}}>
+						<div style={{ fontWeight: "bold" }}>{t("prompts:rules.title")}</div>
+						{!findModeBySlug(visualMode, customModes) && ( // Only show reset for built-in modes
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => {
+									const currentMode = getCurrentMode()
+									if (currentMode?.slug) {
+										handleAgentReset(currentMode.slug, "rules")
+									}
+								}}
+								title={t("prompts:rules.resetToDefault")}
+								data-testid={`${getCurrentMode()?.slug || "code"}-rules-reset`}>
+								<span className="codicon codicon-discard"></span>
+							</Button>
+						)}
+					</div>
+					<div
+						style={{
+							fontSize: "13px",
+							color: "var(--vscode-descriptionForeground)",
+							marginBottom: "8px",
+						}}>
+						{t("prompts:rules.description", { modeName: getCurrentMode()?.name || "Code" })}
+					</div>
+					<VSCodeTextArea
+						value={(() => {
+							const customMode = findModeBySlug(visualMode, customModes)
+							const prompt = customModePrompts?.[visualMode] as PromptComponent
+							return customMode?.rules ?? prompt?.rules ?? getRules(visualMode, customModes)
+						})()}
+						onChange={(e) => {
+							const value =
+								(e as CustomEvent)?.detail?.target?.value ||
+								((e as any).target as HTMLTextAreaElement).value
+							const customMode = findModeBySlug(visualMode, customModes)
+							if (customMode) {
+								updateCustomMode(visualMode, {
+									...customMode,
+									rules: value.trim() || undefined,
+									source: customMode.source || "global",
+								})
+							} else {
+								const existingPrompt = customModePrompts?.[visualMode] as PromptComponent
+								updateAgentPrompt(visualMode, {
+									...existingPrompt,
+									rules: value.trim() || undefined,
+								})
+							}
+						}}
+						rows={4}
+						resize="vertical"
+						style={{ width: "100%" }}
+						data-testid={`${getCurrentMode()?.slug || "code"}-rules-textarea`}
+					/>
+					<div
+						style={{
+							fontSize: "12px",
+							color: "var(--vscode-descriptionForeground)",
+							marginTop: "5px",
+						}}>
+						<Trans
+							i18nKey="prompts:rules.loadFromFile"
+							values={{
+								mode: getCurrentMode()?.name || "Code",
+								slug: getCurrentMode()?.slug || "code",
+							}}
+							components={{
+								span: (
+									<span
+										style={{
+											color: "var(--vscode-textLink-foreground)",
+											cursor: "pointer",
+											textDecoration: "underline",
+										}}
+										onClick={() => {
+											const currentMode = getCurrentMode()
+											if (!currentMode) return
+											vscode.postMessage({
+												type: "openFile",
+												text: `./.roo/rules-${currentMode.slug}/mode_rules.md`,
+												values: { create: true, content: "" },
+											})
+										}}
+									/>
+								),
+							}}
+						/>
+					</div>
+				</div>
+
+				{/* Objective Section */}
+				<div style={{ marginBottom: "8px" }}>
+					<div
+						style={{
+							display: "flex",
+							justifyContent: "space-between",
+							alignItems: "center",
+							marginBottom: "4px",
+						}}>
+						<div style={{ fontWeight: "bold" }}>{t("prompts:objective.title")}</div>
+						{!findModeBySlug(visualMode, customModes) && ( // Only show reset for built-in modes
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => {
+									const currentMode = getCurrentMode()
+									if (currentMode?.slug) {
+										handleAgentReset(currentMode.slug, "objective")
+									}
+								}}
+								title={t("prompts:objective.resetToDefault")}
+								data-testid={`${getCurrentMode()?.slug || "code"}-objective-reset`}>
+								<span className="codicon codicon-discard"></span>
+							</Button>
+						)}
+					</div>
+					<div
+						style={{
+							fontSize: "13px",
+							color: "var(--vscode-descriptionForeground)",
+							marginBottom: "8px",
+						}}>
+						{t("prompts:objective.description", { modeName: getCurrentMode()?.name || "Code" })}
+					</div>
+					<VSCodeTextArea
+						value={(() => {
+							const customMode = findModeBySlug(visualMode, customModes)
+							const prompt = customModePrompts?.[visualMode] as PromptComponent
+							return customMode?.objective ?? prompt?.objective ?? getObjective(visualMode, customModes)
+						})()}
+						onChange={(e) => {
+							const value =
+								(e as CustomEvent)?.detail?.target?.value ||
+								((e as any).target as HTMLTextAreaElement).value
+							const customMode = findModeBySlug(visualMode, customModes)
+							if (customMode) {
+								updateCustomMode(visualMode, {
+									...customMode,
+									objective: value.trim() || undefined,
+									source: customMode.source || "global",
+								})
+							} else {
+								const existingPrompt = customModePrompts?.[visualMode] as PromptComponent
+								updateAgentPrompt(visualMode, {
+									...existingPrompt,
+									objective: value.trim() || undefined,
+								})
+							}
+						}}
+						rows={4}
+						resize="vertical"
+						style={{ width: "100%" }}
+						data-testid={`${getCurrentMode()?.slug || "code"}-objective-textarea`}
+					/>
+					<div
+						style={{
+							fontSize: "12px",
+							color: "var(--vscode-descriptionForeground)",
+							marginTop: "5px",
+						}}>
+						<Trans
+							i18nKey="prompts:objective.loadFromFile"
+							values={{
+								mode: getCurrentMode()?.name || "Code",
+								slug: getCurrentMode()?.slug || "code",
+							}}
+							components={{
+								span: (
+									<span
+										style={{
+											color: "var(--vscode-textLink-foreground)",
+											cursor: "pointer",
+											textDecoration: "underline",
+										}}
+										onClick={() => {
+											const currentMode = getCurrentMode()
+											if (!currentMode) return
+											vscode.postMessage({
+												type: "openFile",
+												text: `./.roo/rules-${currentMode.slug}/mode_objective.md`,
+												values: { create: true, content: "" },
+											})
+										}}
+									/>
+								),
+							}}
+						/>
 					</div>
 				</div>
 
@@ -1342,6 +1555,60 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 											(e as CustomEvent)?.detail?.target?.value ||
 											((e as any).target as HTMLTextAreaElement).value
 										setNewModeCustomInstructions(value)
+									}}
+									rows={4}
+									resize="vertical"
+									style={{ width: "100%" }}
+								/>
+							</div>
+
+							{/* New Mode Rules */}
+							<div style={{ marginBottom: "16px" }}>
+								<div style={{ fontWeight: "bold", marginBottom: "4px" }}>
+									{t("prompts:createModeDialog.rules.label")}
+								</div>
+								<div
+									style={{
+										fontSize: "13px",
+										color: "var(--vscode-descriptionForeground)",
+										marginBottom: "8px",
+									}}>
+									{t("prompts:createModeDialog.rules.description")}
+								</div>
+								<VSCodeTextArea
+									value={newModeRules}
+									onChange={(e) => {
+										const value =
+											(e as CustomEvent)?.detail?.target?.value ||
+											((e as any).target as HTMLTextAreaElement).value
+										setNewModeRules(value)
+									}}
+									rows={4}
+									resize="vertical"
+									style={{ width: "100%" }}
+								/>
+							</div>
+
+							{/* New Mode Objective */}
+							<div style={{ marginBottom: "16px" }}>
+								<div style={{ fontWeight: "bold", marginBottom: "4px" }}>
+									{t("prompts:createModeDialog.objective.label")}
+								</div>
+								<div
+									style={{
+										fontSize: "13px",
+										color: "var(--vscode-descriptionForeground)",
+										marginBottom: "8px",
+									}}>
+									{t("prompts:createModeDialog.objective.description")}
+								</div>
+								<VSCodeTextArea
+									value={newModeObjective}
+									onChange={(e) => {
+										const value =
+											(e as CustomEvent)?.detail?.target?.value ||
+											((e as any).target as HTMLTextAreaElement).value
+										setNewModeObjective(value)
 									}}
 									rows={4}
 									resize="vertical"

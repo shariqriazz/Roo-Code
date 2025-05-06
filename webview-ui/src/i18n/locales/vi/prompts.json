@@ -39,6 +39,18 @@
 		"description": "Thêm hướng dẫn hành vi dành riêng cho chế độ {{modeName}}.",
 		"loadFromFile": "Hướng dẫn tùy chỉnh dành riêng cho chế độ {{modeName}} cũng có thể được tải từ thư mục <span>.roo/rules-{{modeSlug}}/</span> trong không gian làm việc của bạn (.roorules-{{modeSlug}} và .clinerules-{{modeSlug}} đã lỗi thời và sẽ sớm ngừng hoạt động)."
 	},
+	"rules": {
+		"title": "Quy tắc dành riêng cho chế độ (tùy chọn)",
+		"resetToDefault": "Đặt lại về mặc định",
+		"description": "Xác định các quy tắc hoặc ràng buộc cụ thể cho hành vi của Roo trong chế độ {{modeName}}.",
+		"loadFromFile": "Quy tắc dành riêng cho chế độ {{mode}} cũng có thể được tải từ <span>.roo/rules-{{slug}}/mode_rules.md</span> trong không gian làm việc của bạn."
+	},
+	"objective": {
+		"title": "Mục tiêu dành riêng cho chế độ (tùy chọn)",
+		"resetToDefault": "Đặt lại về mặc định",
+		"description": "Nêu rõ mục tiêu hoặc mục đích chính của Roo khi hoạt động ở chế độ {{modeName}}.",
+		"loadFromFile": "Mục tiêu dành riêng cho chế độ {{mode}} cũng có thể được tải từ <span>.roo/rules-{{slug}}/mode_objective.md</span> trong không gian làm việc của bạn."
+	},
 	"globalCustomInstructions": {
 		"title": "Hướng dẫn tùy chỉnh cho tất cả các chế độ",
 		"description": "Những hướng dẫn này áp dụng cho tất cả các chế độ. Chúng cung cấp một bộ hành vi cơ bản có thể được nâng cao bởi hướng dẫn dành riêng cho chế độ bên dưới.\nNếu bạn muốn Roo suy nghĩ và nói bằng ngôn ngữ khác với ngôn ngữ hiển thị trình soạn thảo của bạn ({{language}}), bạn có thể chỉ định ở đây.",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "Hướng dẫn tùy chỉnh (tùy chọn)",
 			"description": "Thêm hướng dẫn hành vi dành riêng cho chế độ này."
+		},
+		"rules": {
+			"label": "Quy tắc (tùy chọn)",
+			"description": "Xác định các quy tắc hoặc ràng buộc cụ thể cho chế độ này."
+		},
+		"objective": {
+			"label": "Mục tiêu (tùy chọn)",
+			"description": "Nêu rõ mục tiêu chính cho chế độ này."
 		},
 		"buttons": {
 			"cancel": "Hủy",

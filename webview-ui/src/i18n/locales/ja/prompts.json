@@ -39,6 +39,18 @@
 		"description": "{{modeName}}モードに特化した行動ガイドラインを追加します。",
 		"loadFromFile": "{{mode}}モード固有のカスタム指示は、ワークスペースの<span>.roo/rules-{{slug}}/</span>フォルダからも読み込めます（.roorules-{{slug}}と.clinerules-{{slug}}は非推奨であり、まもなく機能しなくなります）。"
 	},
+	"rules": {
+		"title": "モード固有のルール (任意)",
+		"resetToDefault": "デフォルトにリセット",
+		"description": "{{modeName}} モードでの Roo の動作に関する特定のルールまたは制約を定義します。",
+		"loadFromFile": "{{mode}} モード固有のルールは、ワークスペースの <span>.roo/rules-{{slug}}/mode_rules.md</span> からも読み込めます。"
+	},
+	"objective": {
+		"title": "モード固有の目的 (任意)",
+		"resetToDefault": "デフォルトにリセット",
+		"description": "{{modeName}} モードで動作する際の Roo の主な目的または目標を明確に記述します。",
+		"loadFromFile": "{{mode}} モード固有の目的は、ワークスペースの <span>.roo/rules-{{slug}}/mode_objective.md</span> からも読み込めます。"
+	},
 	"globalCustomInstructions": {
 		"title": "すべてのモードのカスタム指示",
 		"description": "これらの指示はすべてのモードに適用されます。モード固有の指示で強化できる基本的な動作セットを提供します。\nRooにエディタの表示言語({{language}})とは異なる言語で考えたり話したりさせたい場合は、ここで指定できます。",
@@ -137,6 +149,14 @@
 		"customInstructions": {
 			"label": "カスタム指示（オプション）",
 			"description": "このモードに特化した行動ガイドラインを追加します。"
+		},
+		"rules": {
+			"label": "ルール (任意)",
+			"description": "このモードの特定のルールまたは制約を定義します。"
+		},
+		"objective": {
+			"label": "目的 (任意)",
+			"description": "このモードの主な目的を明確に記述します。"
 		},
 		"buttons": {
 			"cancel": "キャンセル",

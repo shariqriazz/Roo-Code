@@ -53,9 +53,14 @@ async function generatePrompt(
 	// If diff is disabled, don't pass the diffStrategy
 	const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 
-	// Get the full mode config to ensure we have the role definition
+	// Get the full mode config to ensure we have the role definition, rules, and objective
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
-	const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
+	const roleDefinition = promptComponent?.roleDefinition ?? modeConfig.roleDefinition
+	const modeSpecificRules = promptComponent?.rules ?? modeConfig.rules
+	const modeSpecificObjective = promptComponent?.objective ?? modeConfig.objective
+
+	const rulesSection = modeSpecificRules ?? getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)
+	const objectiveSection = modeSpecificObjective ?? getObjectiveSection()
 
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
@@ -89,11 +94,11 @@ ${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy
 
 ${modesSection}
 
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy)}
+${rulesSection}
 
 ${getSystemInfoSection(cwd)}
 
-${getObjectiveSection()}
+${objectiveSection}
 
 ${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
 

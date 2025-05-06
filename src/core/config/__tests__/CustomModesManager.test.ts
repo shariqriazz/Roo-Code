@@ -93,6 +93,93 @@ describe("CustomModesManager", () => {
 			expect(mode2?.roleDefinition).toBe("Role 2 Override")
 		})
 
+		it("should load rules and objective from JSON and override from files", async () => {
+			const settingsModes = [
+				{
+					slug: "mode-json",
+					name: "Mode JSON",
+					roleDefinition: "Role JSON",
+					groups: ["read"],
+					rules: "JSON rules",
+					objective: "JSON objective",
+				},
+				{
+					slug: "mode-file-override",
+					name: "Mode File Override",
+					roleDefinition: "Role File Override",
+					groups: ["read"],
+					rules: "JSON rules to be overridden",
+					objective: "JSON objective to be overridden",
+				},
+				{
+					slug: "mode-partial-override",
+					name: "Mode Partial Override",
+					roleDefinition: "Role Partial Override",
+					groups: ["read"],
+					rules: "JSON rules, no file override",
+					// objective will be overridden by file
+				},
+			]
+
+			const mockModeFileOverrideRulesPath = path.join(
+				"/mock/workspace",
+				".roo",
+				"rules-mode-file-override",
+				"mode_rules.md",
+			)
+			const mockModeFileOverrideObjectivePath = path.join(
+				"/mock/workspace",
+				".roo",
+				"rules-mode-file-override",
+				"mode_objective.md",
+			)
+			const mockModePartialOverrideObjectivePath = path.join(
+				"/mock/workspace",
+				".roo",
+				"rules-mode-partial-override",
+				"mode_objective.md",
+			)
+
+			;(fs.readFile as jest.Mock).mockImplementation(async (filePath: string) => {
+				if (filePath === mockSettingsPath) {
+					return JSON.stringify({ customModes: settingsModes })
+				}
+				if (filePath === mockModeFileOverrideRulesPath) {
+					return "File rules for mode-file-override"
+				}
+				if (filePath === mockModeFileOverrideObjectivePath) {
+					return "File objective for mode-file-override"
+				}
+				if (filePath === mockModePartialOverrideObjectivePath) {
+					return "File objective for mode-partial-override"
+				}
+				throw new Error(`File not found: ${filePath}`)
+			})
+			;(fileExistsAtPath as jest.Mock).mockImplementation(async (filePath: string) => {
+				return [
+					mockSettingsPath,
+					mockModeFileOverrideRulesPath,
+					mockModeFileOverrideObjectivePath,
+					mockModePartialOverrideObjectivePath,
+				].includes(filePath)
+			})
+
+			const modes = await manager.getCustomModes()
+			expect(modes).toHaveLength(3)
+
+			const modeJson = modes.find((m) => m.slug === "mode-json")
+			expect(modeJson?.rules).toBe("JSON rules")
+			expect(modeJson?.objective).toBe("JSON objective")
+
+			const modeFileOverride = modes.find((m) => m.slug === "mode-file-override")
+			expect(modeFileOverride?.rules).toBe("File rules for mode-file-override")
+			expect(modeFileOverride?.objective).toBe("File objective for mode-file-override")
+
+			const modePartialOverride = modes.find((m) => m.slug === "mode-partial-override")
+			expect(modePartialOverride?.rules).toBe("JSON rules, no file override")
+			expect(modePartialOverride?.objective).toBe("File objective for mode-partial-override")
+		})
+
 		it("should handle missing .roomodes file", async () => {
 			const settingsModes = [{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] }]
 
@@ -462,6 +549,57 @@ describe("CustomModesManager", () => {
 			)
 
 			// Should trigger onUpdate
+			expect(mockOnUpdate).toHaveBeenCalled()
+		})
+
+		it("should update mode with rules and objective in settings file", async () => {
+			const newMode: ModeConfig = {
+				slug: "mode-with-rules",
+				name: "Mode With Rules",
+				roleDefinition: "Role With Rules",
+				groups: ["read"],
+				rules: "Updated rules",
+				objective: "Updated objective",
+				source: "global",
+			}
+
+			let settingsContent = { customModes: [] }
+
+			;(fs.readFile as jest.Mock).mockImplementation(async (filePath: string) => {
+				if (filePath === mockSettingsPath) {
+					return JSON.stringify(settingsContent)
+				}
+				if (filePath === mockRoomodes) {
+					// Assume .roomodes is empty or doesn't exist for this test
+					return JSON.stringify({ customModes: [] })
+				}
+				throw new Error("File not found")
+			})
+			;(fileExistsAtPath as jest.Mock).mockImplementation(async (filePath: string) => {
+				return filePath === mockSettingsPath // Only settings file exists for this test
+			})
+			;(fs.writeFile as jest.Mock).mockImplementation(
+				async (filePath: string, content: string, _encoding?: string) => {
+					if (filePath === mockSettingsPath) {
+						settingsContent = JSON.parse(content)
+					}
+					return Promise.resolve()
+				},
+			)
+
+			await manager.updateCustomMode("mode-with-rules", newMode)
+
+			expect(fs.writeFile).toHaveBeenCalledWith(mockSettingsPath, expect.any(String), "utf-8")
+			const writeCall = (fs.writeFile as jest.Mock).mock.calls[0]
+			const writtenJson = JSON.parse(writeCall[1])
+			expect(writtenJson.customModes).toContainEqual(
+				expect.objectContaining({
+					slug: "mode-with-rules",
+					rules: "Updated rules",
+					objective: "Updated objective",
+					source: "global",
+				}),
+			)
 			expect(mockOnUpdate).toHaveBeenCalled()
 		})
 
