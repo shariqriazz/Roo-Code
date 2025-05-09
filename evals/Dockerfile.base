@@ -1,0 +1,114 @@
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set up timezone
+RUN apt-get update && apt-get install -y tzdata
+ENV TZ=UTC
+
+# Install common dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    software-properties-common \
+    unzip \
+    vim \
+    netcat \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g pnpm@10.7.1
+
+# Install Python 3.13
+RUN add-apt-repository ppa:deadsnakes/ppa -y \
+    && apt-get update \
+    && apt-get install -y python3.13 python3.13-venv python3.13-dev python3-pip \
+    && ln -sf /usr/bin/python3.13 /usr/bin/python \
+    && ln -sf /usr/bin/python3.13 /usr/bin/python3 \
+    && curl -sSL https://bootstrap.pypa.io/get-pip.py | python3 \
+    && pip install uv
+
+# Install Go 1.24
+RUN curl -OL https://golang.org/dl/go1.24.2.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.24.2.linux-amd64.tar.gz \
+    && rm go1.24.2.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
+# Create non-root user earlier in the process
+RUN useradd -m -s /bin/bash coder \
+    && echo "coder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Install Rust for root
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH=$PATH:/root/.cargo/bin
+
+# Install Rust for coder user
+RUN mkdir -p /home/coder/.cargo \
+    && chown -R coder:coder /home/coder/.cargo \
+    && sudo -u coder bash -c 'curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y'
+ENV PATH=$PATH:/home/coder/.cargo/bin
+
+# Install Java 17
+RUN apt-get update && apt-get install -y openjdk-17-jdk \
+    && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+# Install Docker CLI (for container orchestration)
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
+    && apt-get install -y gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Code Server
+RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# Install VS Code extensions for Code Server
+RUN code-server --install-extension golang.go \
+    && code-server --install-extension dbaeumer.vscode-eslint \
+    && code-server --install-extension redhat.java \
+    && code-server --install-extension ms-python.python \
+    && code-server --install-extension rust-lang.rust-analyzer
+
+# User is already created above
+
+# Set up working directory
+WORKDIR /home/coder
+USER coder
+
+# Configure Code Server
+RUN mkdir -p /home/coder/.config/code-server \
+    && echo "bind-addr: 0.0.0.0:8080\nauth: none\ncert: false" > /home/coder/.config/code-server/config.yaml
+
+# Verify installations
+RUN node --version \
+    && pnpm --version \
+    && python --version \
+    && go version \
+    && sudo -u coder bash -c 'source $HOME/.cargo/env && rustc --version' \
+    && javac --version \
+    && gh --version \
+    && code-server --version
+
+# Set environment variables
+ENV PATH="/home/coder/.local/bin:${PATH}"
+ENV SHELL=/bin/bash
+
+CMD ["bash"]

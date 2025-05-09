@@ -1,0 +1,53 @@
+FROM roo-code-evals-base:latest
+
+USER root
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY --chown=coder:coder package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+
+# Copy the web app
+COPY --chown=coder:coder apps/web ./apps/web/
+COPY --chown=coder:coder packages ./packages/
+COPY --chown=coder:coder config ./config/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Create TypeScript files that are referenced in the imports
+RUN mkdir -p packages/types/dist
+RUN touch packages/types/dist/exercises.js packages/types/dist/ipc.js packages/types/dist/roo-code.js packages/types/dist/roo-code-defaults.js
+RUN mkdir -p packages/db/dist
+RUN touch packages/db/dist/schema.js
+
+# Build the TypeScript packages first
+RUN pnpm --filter @evals/types tsc || true
+RUN pnpm --filter @evals/db tsc || true
+RUN pnpm --filter @evals/ipc tsc || true
+
+# Copy the TypeScript files to their JavaScript locations if they don't exist
+RUN for file in packages/types/src/*.ts; do \
+      jsfile="$(echo "$file" | sed 's/src/dist/;s/\.ts$/.js/')"; \
+      if [ ! -f "$jsfile" ]; then \
+        mkdir -p "$(dirname "$jsfile")"; \
+        cp "$file" "$jsfile"; \
+        sed -i 's/\.ts"/.js"/g' "$jsfile"; \
+      fi \
+    done
+
+# Skip the web build for now since we'll run it in development mode
+# RUN pnpm build --filter @evals/web
+
+# Switch to non-root user
+USER coder
+
+# Ensure Rust is in the PATH for the coder user
+ENV PATH="/home/coder/.cargo/bin:${PATH}"
+
+# Expose the web app port
+EXPOSE 3000
+
+# Start the web app
+CMD ["pnpm", "web"]

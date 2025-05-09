@@ -1,0 +1,32 @@
+FROM roo-code-evals-base:latest
+
+USER root
+
+# Set working directory
+WORKDIR /app
+
+# Copy necessary files for task execution
+COPY --chown=coder:coder packages/types ./packages/types/
+COPY --chown=coder:coder packages/ipc ./packages/ipc/
+
+# Create directory for exercises
+RUN mkdir -p /app/exercises
+
+# Install Roo Code extension (will be mounted from host)
+RUN mkdir -p /home/coder/.local/share/code-server/extensions
+
+# Switch to non-root user
+USER coder
+
+# Ensure Rust is in the PATH for the coder user
+ENV PATH="/home/coder/.cargo/bin:${PATH}"
+
+# Expose Code Server port
+EXPOSE 8080
+
+# Environment variables for task execution
+ENV ROO_CODE_IPC_SOCKET_PATH=""
+ENV OPENROUTER_API_KEY=""
+
+# Start Code Server with the exercise workspace
+CMD ["bash", "-c", "code-server --auth none --bind-addr 0.0.0.0:8080 /app/exercises/${LANGUAGE}/${EXERCISE}"]

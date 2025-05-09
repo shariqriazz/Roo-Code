@@ -1,0 +1,92 @@
+services:
+  # Base image build
+  base:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+    image: roo-code-evals-base:latest
+    profiles:
+      - build-only
+
+  # Web application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: roo-code-evals-web:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ..:/roo-code:ro
+    environment:
+      - BENCHMARKS_DB_PATH=file:///app/data/evals.db
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - ENABLE_NODEJS=${ENABLE_NODEJS:-true}
+      - ENABLE_PYTHON=${ENABLE_PYTHON:-true}
+      - ENABLE_GOLANG=${ENABLE_GOLANG:-true}
+      - ENABLE_RUST=${ENABLE_RUST:-true}
+      - ENABLE_JAVA=${ENABLE_JAVA:-true}
+    command: ["pnpm", "--filter", "@evals/web", "dev"]
+    depends_on:
+      - orchestrator
+    networks:
+      - evals-network
+
+  # Orchestrator
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.orchestrator
+    image: roo-code-evals-orchestrator:latest
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./data:/app/data
+      - ..:/roo-code:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../evals:/app/exercises:ro
+    environment:
+      - BENCHMARKS_DB_PATH=file:///app/data/evals.db
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - TASK_CONTAINER_IMAGE=roo-code-evals-task:latest
+      - TASK_PORT_START=8080
+      - TASK_PORT_RANGE=10
+      - HOST_IP=${HOST_IP:-host.docker.internal}
+      - ENABLE_NODEJS=${ENABLE_NODEJS:-true}
+      - ENABLE_PYTHON=${ENABLE_PYTHON:-true}
+      - ENABLE_GOLANG=${ENABLE_GOLANG:-true}
+      - ENABLE_RUST=${ENABLE_RUST:-true}
+      - ENABLE_JAVA=${ENABLE_JAVA:-true}
+    networks:
+      - evals-network
+
+  # Task container (used as a template for dynamic creation)
+  task:
+    build:
+      context: .
+      dockerfile: Dockerfile.task
+    image: roo-code-evals-task:latest
+    profiles:
+      - build-only
+    volumes:
+      - ../../evals:/app/exercises:ro
+      - ..:/roo-code:ro
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - ENABLE_NODEJS=${ENABLE_NODEJS:-true}
+      - ENABLE_PYTHON=${ENABLE_PYTHON:-true}
+      - ENABLE_GOLANG=${ENABLE_GOLANG:-true}
+      - ENABLE_RUST=${ENABLE_RUST:-true}
+      - ENABLE_JAVA=${ENABLE_JAVA:-true}
+    networks:
+      - evals-network
+
+networks:
+  evals-network:
+    driver: bridge
+    name: evals_evals-network
+    external: false
+
+# No volumes needed as we're using direct mounts
