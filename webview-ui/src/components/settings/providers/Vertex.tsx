@@ -1,5 +1,5 @@
 import { useCallback } from "react"
-import { VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeLink, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import { ApiConfiguration } from "@roo/shared/api"
 
@@ -91,6 +91,18 @@ export const Vertex = ({ apiConfiguration, setApiConfigurationField }: VertexPro
 						))}
 					</SelectContent>
 				</Select>
+			</div>
+			<div className="mt-4">
+				<VSCodeCheckbox
+					checked={apiConfiguration?.enableGoogleSearchGrounding ?? false}
+					onChange={(e: any) => {
+						setApiConfigurationField("enableGoogleSearchGrounding", e.target.checked)
+					}}>
+					{t("settings:providers.vertex.enableGoogleSearchGrounding.label")}
+				</VSCodeCheckbox>
+				<div className="text-sm text-vscode-descriptionForeground mt-1">
+					{t("settings:providers.vertex.enableGoogleSearchGrounding.description")}
+				</div>
 			</div>
 		</>
 	)

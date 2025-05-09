@@ -395,6 +395,7 @@ describe("ClineProvider", () => {
 			shouldShowAnnouncement: false,
 			apiConfiguration: {
 				apiProvider: "openrouter",
+				enableGoogleSearchGrounding: false,
 			},
 			customInstructions: undefined,
 			alwaysAllowReadOnly: false,
@@ -2206,5 +2207,185 @@ describe("getTelemetryProperties", () => {
 		const properties = await provider.getTelemetryProperties()
 
 		expect(properties).toHaveProperty("modelId", "claude-3-7-sonnet-20250219")
+	})
+})
+describe("Google Search Grounding feature", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockOutputChannel: vscode.OutputChannel
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+	const MockedCline = require("../../Cline").Cline as jest.Mock // Get the globally mocked Cline
+
+	beforeEach(async () => {
+		jest.clearAllMocks()
+
+		const globalState: Record<string, any> = {
+			mode: "code",
+			currentApiConfigName: "gemini-test-config",
+			apiProvider: "gemini", // Default provider for these tests
+			// other necessary global state for apiConfiguration
+		}
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => globalState[key]),
+				update: jest.fn().mockImplementation((key: string, value: any) => (globalState[key] = value)),
+				keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: {
+				get: jest.fn(),
+				store: jest.fn(),
+				delete: jest.fn(),
+			},
+			subscriptions: [],
+			extension: {
+				packageJSON: { version: "1.0.0" },
+			},
+			globalStorageUri: {
+				fsPath: "/test/storage/path",
+			},
+		} as unknown as vscode.ExtensionContext
+
+		mockOutputChannel = {
+			appendLine: jest.fn(),
+		} as unknown as vscode.OutputChannel
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				onDidReceiveMessage: jest.fn(),
+			},
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		await provider.resolveWebviewView(mockWebviewView) // Ensure webview is resolved
+
+		// Mock ProviderSettingsManager for these tests
+		;(provider as any).providerSettingsManager = {
+			getModeConfigId: jest.fn().mockResolvedValue("gemini-test-config-id"),
+			listConfig: jest
+				.fn()
+				.mockResolvedValue([
+					{ name: "gemini-test-config", id: "gemini-test-config-id", apiProvider: "gemini" },
+				]),
+			loadConfig: jest.fn().mockImplementation(async (configName: string) => {
+				if (configName === "gemini-test-config") {
+					return {
+						// Return a base config, specific fields will be overridden by globalState.get
+						apiProvider: "gemini",
+						apiModelId: "gemini-pro",
+						// enableGoogleSearchGrounding will come from globalState.get
+					}
+				}
+				return { apiProvider: "gemini" }
+			}),
+			saveConfig: jest.fn().mockResolvedValue(undefined),
+			setModeConfig: jest.fn(),
+		}
+	})
+
+	test("ClineProvider passes enableGoogleSearchGrounding:true to Cline constructor when set", async () => {
+		// Override globalState.get for this specific test case
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+			if (key === "apiProvider") return "gemini"
+			if (key === "enableGoogleSearchGrounding") return true
+			if (key === "currentApiConfigName") return "gemini-test-config"
+			// Add other necessary apiConfiguration fields if Cline constructor depends on them directly from globalState
+			return undefined
+		})
+
+		await provider.initClineWithTask("test task for grounding enabled")
+
+		expect(MockedCline).toHaveBeenCalled()
+		const clineOptions = MockedCline.mock.calls[MockedCline.mock.calls.length - 1][0]
+		expect(clineOptions.apiConfiguration.apiProvider).toBe("gemini")
+		expect(clineOptions.apiConfiguration.enableGoogleSearchGrounding).toBe(true)
+	})
+
+	test("ClineProvider passes enableGoogleSearchGrounding:false to Cline constructor when set", async () => {
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+			if (key === "apiProvider") return "gemini"
+			if (key === "enableGoogleSearchGrounding") return false
+			if (key === "currentApiConfigName") return "gemini-test-config"
+			return undefined
+		})
+
+		await provider.initClineWithTask("test task for grounding disabled")
+
+		expect(MockedCline).toHaveBeenCalled()
+		const clineOptions = MockedCline.mock.calls[MockedCline.mock.calls.length - 1][0]
+		expect(clineOptions.apiConfiguration.apiProvider).toBe("gemini")
+		expect(clineOptions.apiConfiguration.enableGoogleSearchGrounding).toBe(false)
+	})
+
+	test("ClineProvider passes enableGoogleSearchGrounding as undefined (defaulting to false behavior in handler) if not set", async () => {
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+			if (key === "apiProvider") return "gemini"
+			// enableGoogleSearchGrounding is deliberately not returned, so it should be undefined
+			if (key === "currentApiConfigName") return "gemini-test-config"
+			return undefined
+		})
+
+		await provider.initClineWithTask("test task for grounding not set")
+
+		expect(MockedCline).toHaveBeenCalled()
+		const clineOptions = MockedCline.mock.calls[MockedCline.mock.calls.length - 1][0]
+		expect(clineOptions.apiConfiguration.apiProvider).toBe("gemini")
+		expect(clineOptions.apiConfiguration.enableGoogleSearchGrounding).toBeUndefined()
+	})
+
+	test("Settings persistence: updates enableGoogleSearchGrounding via upsertApiConfiguration and reloads it", async () => {
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		const configName = "gemini-config-for-persistence"
+		const initialApiConfig = {
+			apiProvider: "gemini" as const,
+			apiModelId: "gemini-pro",
+			enableGoogleSearchGrounding: false, // Initial state
+		}
+		const updatedApiConfig = {
+			...initialApiConfig,
+			enableGoogleSearchGrounding: true, // Updated state
+		}
+
+		// 1. Simulate saving the updated config
+		await messageHandler({
+			type: "upsertApiConfiguration",
+			text: configName,
+			apiConfiguration: updatedApiConfig,
+		})
+
+		// Verify ProviderSettingsManager.saveConfig was called
+		expect((provider as any).providerSettingsManager.saveConfig).toHaveBeenCalledWith(configName, updatedApiConfig)
+
+		// Verify global state for currentApiConfigName was updated
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("currentApiConfigName", configName)
+
+		// 2. Mock loading this updated config
+		//    ProviderSettingsManager.loadConfig should now reflect the "saved" state
+		;(provider as any).providerSettingsManager.loadConfig.mockResolvedValue(updatedApiConfig)
+		//    ContextProxy.getValue for 'enableGoogleSearchGrounding' should reflect the "saved" state
+		;(mockContext.globalState.get as jest.Mock).mockImplementation((key: string) => {
+			if (key === "currentApiConfigName") return configName
+			if (key === "apiProvider") return "gemini" // from updatedApiConfig
+			if (key === "apiModelId") return "gemini-pro" // from updatedApiConfig
+			if (key === "enableGoogleSearchGrounding") return true // from updatedApiConfig
+			return undefined
+		})
+
+		// 3. Trigger a state refresh / get state that would be sent to webview
+		await provider.postStateToWebview()
+
+		// Verify the state posted to webview contains the updated setting
+		const lastPostMessageCall = mockPostMessage.mock.calls[mockPostMessage.mock.calls.length - 1][0]
+		expect(lastPostMessageCall.type).toBe("state")
+		expect(lastPostMessageCall.state.apiConfiguration.enableGoogleSearchGrounding).toBe(true)
+		expect(lastPostMessageCall.state.currentApiConfigName).toBe(configName)
+
+		// 4. Verify direct call to getState also reflects the change
+		const reloadedState = await provider.getState()
+		expect(reloadedState.apiConfiguration.enableGoogleSearchGrounding).toBe(true)
 	})
 })

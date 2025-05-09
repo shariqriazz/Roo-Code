@@ -133,6 +133,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 				maxOutputTokens,
 				temperature: this.options.modelTemperature ?? 0,
 			},
+			tools: this.options.enableGoogleSearchGrounding ? [{ googleSearchRetrieval: {} }] : undefined,
 		}
 
 		const result = await this.client.models.generateContentStream(params)
@@ -220,6 +221,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 						: undefined,
 					temperature: this.options.modelTemperature ?? 0,
 				},
+				tools: this.options.enableGoogleSearchGrounding ? [{ googleSearchRetrieval: {} }] : undefined,
 			})
 
 			return result.text ?? ""

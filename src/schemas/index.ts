@@ -445,6 +445,7 @@ export const providerSettingsSchema = z.object({
 	fuzzyMatchThreshold: z.number().optional(),
 	modelTemperature: z.number().nullish(),
 	rateLimitSeconds: z.number().optional(),
+	enableGoogleSearchGrounding: z.boolean().optional(),
 	// Fake AI
 	fakeAi: z.unknown().optional(),
 })
@@ -535,6 +536,7 @@ const providerSettingsRecord: ProviderSettingsRecord = {
 	fuzzyMatchThreshold: undefined,
 	modelTemperature: undefined,
 	rateLimitSeconds: undefined,
+	enableGoogleSearchGrounding: undefined,
 	// Fake AI
 	fakeAi: undefined,
 	// X.AI (Grok)

@@ -136,6 +136,7 @@ type ProviderSettings = {
 	fuzzyMatchThreshold?: number | undefined
 	modelTemperature?: (number | null) | undefined
 	rateLimitSeconds?: number | undefined
+	enableGoogleSearchGrounding?: boolean | undefined
 	fakeAi?: unknown | undefined
 }
 

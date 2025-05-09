@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react"
-import { Checkbox } from "vscrui"
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
 import { ApiConfiguration } from "@roo/shared/api"
 
@@ -51,9 +50,11 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 				</VSCodeButtonLink>
 			)}
 			<div>
-				<Checkbox
+				<VSCodeCheckbox
 					checked={googleGeminiBaseUrlSelected}
-					onChange={(checked: boolean) => {
+					onChange={(e: any) => {
+						// VSCodeCheckbox onChange provides an event
+						const checked = e.target.checked
 						setGoogleGeminiBaseUrlSelected(checked)
 
 						if (!checked) {
@@ -61,7 +62,7 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 						}
 					}}>
 					{t("settings:providers.useCustomBaseUrl")}
-				</Checkbox>
+				</VSCodeCheckbox>
 				{googleGeminiBaseUrlSelected && (
 					<VSCodeTextField
 						value={apiConfiguration?.googleGeminiBaseUrl || ""}
@@ -71,6 +72,18 @@ export const Gemini = ({ apiConfiguration, setApiConfigurationField }: GeminiPro
 						className="w-full mt-1"
 					/>
 				)}
+			</div>
+			<div className="mt-4">
+				<VSCodeCheckbox
+					checked={apiConfiguration?.enableGoogleSearchGrounding ?? false}
+					onChange={(e: any) => {
+						setApiConfigurationField("enableGoogleSearchGrounding", e.target.checked)
+					}}>
+					{t("settings:providers.gemini.enableGoogleSearchGrounding.label")}
+				</VSCodeCheckbox>
+				<div className="text-sm text-vscode-descriptionForeground mt-1">
+					{t("settings:providers.gemini.enableGoogleSearchGrounding.description")}
+				</div>
 			</div>
 		</>
 	)
