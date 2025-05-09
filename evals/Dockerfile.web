@@ -1,3 +1,4 @@
+ARG TARGETARCH=amd64
 FROM roo-code-evals-base:latest
 
 USER root

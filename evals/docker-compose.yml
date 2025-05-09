@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.base
+      args:
+        - TARGETARCH=${TARGETARCH:-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')}
     image: roo-code-evals-base:latest
     profiles:
       - build-only
@@ -13,6 +15,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
+      args:
+        - TARGETARCH=${TARGETARCH:-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')}
     image: roo-code-evals-web:latest
     ports:
       - "3000:3000"
@@ -38,6 +42,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.orchestrator
+      args:
+        - TARGETARCH=${TARGETARCH:-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')}
     image: roo-code-evals-orchestrator:latest
     ports:
       - "4000:4000"
@@ -67,6 +73,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.task
+      args:
+        - TARGETARCH=${TARGETARCH:-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')}
     image: roo-code-evals-task:latest
     profiles:
       - build-only

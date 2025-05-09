@@ -8,6 +8,18 @@ set -e
 # Enable Docker Compose Bake for better performance
 export COMPOSE_BAKE=true
 
+# Detect architecture
+if [[ "$(uname -m)" == "arm64" ]] || [[ "$(uname -m)" == "aarch64" ]]; then
+    export TARGETARCH="arm64"
+    echo "🖥️ Detected ARM64 architecture"
+else
+    export TARGETARCH="amd64"
+    echo "🖥️ Detected AMD64 architecture"
+fi
+
+# Add architecture to .env.docker
+echo "TARGETARCH=$TARGETARCH" >> .env.docker
+
 # Language selection menu
 menu() {
   echo -e "\n📋 Which eval types would you like to support?\n"
@@ -138,16 +150,16 @@ else
 fi
 
 # Build the base image
-echo "🔨 Building base Docker image..."
-docker-compose build base
+echo "🔨 Building base Docker image for $TARGETARCH architecture..."
+docker-compose build --build-arg TARGETARCH=$TARGETARCH base
 
 # Build the other images
-echo "🔨 Building Docker images..."
-docker-compose build orchestrator task
+echo "🔨 Building Docker images for $TARGETARCH architecture..."
+docker-compose build --build-arg TARGETARCH=$TARGETARCH orchestrator task
 
 # Build the web image separately to handle potential failures
-echo "🔨 Building web image..."
-docker-compose build web || {
+echo "🔨 Building web image for $TARGETARCH architecture..."
+docker-compose build --build-arg TARGETARCH=$TARGETARCH web || {
     echo "⚠️ Web image build failed, but we can still proceed with development mode"
     echo "The web app will be built when started in development mode"
 }
