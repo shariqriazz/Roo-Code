@@ -32,7 +32,7 @@ import { openMention } from "../mentions"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
-import { Mode, defaultModeSlug } from "../../shared/modes"
+import { Mode, defaultModeSlug } from "../../shared/modes" // Removed ModeConfig
 import { GlobalState } from "../../schemas"
 import { getModels, flushModels } from "../../api/providers/fetchers/cache"
 import { generateSystemPrompt } from "./generateSystemPrompt"
@@ -1305,6 +1305,24 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			const isOptedIn = telemetrySetting === "enabled"
 			telemetryService.updateTelemetryState(isOptedIn)
 			await provider.postStateToWebview()
+			break
+		}
+		case "updateModeRules": {
+			if (message.slug) {
+				await provider.updateModePromptSection(message.slug as Mode, "rules", message.sectionText)
+			}
+			break
+		}
+		case "updateModeCapabilities": {
+			if (message.slug) {
+				await provider.updateModePromptSection(message.slug as Mode, "capabilities", message.sectionText)
+			}
+			break
+		}
+		case "updateModeObjective": {
+			if (message.slug) {
+				await provider.updateModePromptSection(message.slug as Mode, "objective", message.sectionText)
+			}
 			break
 		}
 	}

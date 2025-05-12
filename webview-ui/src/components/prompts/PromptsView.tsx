@@ -38,7 +38,7 @@ import {
 	CommandGroup,
 	Input,
 } from "../ui"
-import { ChevronsUpDown, X } from "lucide-react"
+import { ChevronsUpDown, X, RotateCcw } from "lucide-react"
 
 // Get all available groups that should show in prompts view
 const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
@@ -68,6 +68,12 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		customInstructions,
 		setCustomInstructions,
 		customModes,
+		defaultRules,
+		defaultCapabilities,
+		defaultObjective,
+		setModeRules, // Assuming these are now available from context
+		setModeCapabilities,
+		setModeObjective,
 	} = useExtensionState()
 
 	// Use a local state to track the visually active mode
@@ -103,17 +109,26 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 			const updatedPrompt = { ...existingPrompt, ...promptData }
 
 			// Only include properties that differ from defaults
-			if (updatedPrompt.roleDefinition === getRoleDefinition(mode)) {
+			// This logic will need to be extended for rules, capabilities, objective
+			if (updatedPrompt.roleDefinition === getRoleDefinition(mode, customModes)) {
+				// Pass customModes to getRoleDefinition
 				delete updatedPrompt.roleDefinition
 			}
+			if (updatedPrompt.customInstructions === getCustomInstructions(mode, customModes)) {
+				// Pass customModes
+				delete updatedPrompt.customInstructions
+			}
+			// Add similar checks for rules, capabilities, objective if they are part of PromptComponent
+			// For now, we send them, and backend can handle defaults if they match.
+			// Or, ensure PromptComponent type includes these new fields.
 
 			vscode.postMessage({
 				type: "updatePrompt",
 				promptMode: mode,
-				customPrompt: updatedPrompt,
+				customPrompt: updatedPrompt, // This will carry new fields if PromptComponent is updated
 			})
 		},
-		[customModePrompts],
+		[customModePrompts, customModes], // Added customModes dependency
 	)
 
 	const updateCustomMode = useCallback((slug: string, modeConfig: ModeConfig) => {
@@ -196,6 +211,9 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	const [newModeSlug, setNewModeSlug] = useState("")
 	const [newModeRoleDefinition, setNewModeRoleDefinition] = useState("")
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
+	const [newModeRules, setNewModeRules] = useState("") // For create dialog
+	const [newModeCapabilities, setNewModeCapabilities] = useState("") // For create dialog
+	const [newModeObjective, setNewModeObjective] = useState("") // For create dialog
 	const [newModeGroups, setNewModeGroups] = useState<GroupEntry[]>(availableGroups)
 	const [newModeSource, setNewModeSource] = useState<ModeSource>("global")
 
@@ -213,13 +231,16 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		setNewModeGroups(availableGroups)
 		setNewModeRoleDefinition("")
 		setNewModeCustomInstructions("")
+		setNewModeRules(defaultRules ?? "") // Initialize with defaults
+		setNewModeCapabilities(defaultCapabilities ?? "") // Initialize with defaults
+		setNewModeObjective(defaultObjective ?? "") // Initialize with defaults
 		setNewModeSource("global")
 		// Reset error states
 		setNameError("")
 		setSlugError("")
 		setRoleDefinitionError("")
 		setGroupsError("")
-	}, [])
+	}, [defaultRules, defaultCapabilities, defaultObjective]) // Removed resetFormState from its own dependencies
 
 	// Reset form fields when dialog opens
 	useEffect(() => {
@@ -259,11 +280,14 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 			name: newModeName,
 			roleDefinition: newModeRoleDefinition.trim(),
 			customInstructions: newModeCustomInstructions.trim() || undefined,
+			rules: newModeRules.trim() || undefined,
+			capabilities: newModeCapabilities.trim() || undefined,
+			objective: newModeObjective.trim() || undefined,
 			groups: newModeGroups,
 			source,
 		}
 
-		// Validate the mode against the schema
+		// Validate the mode against the schema (assuming modeConfigSchema is updated for new fields)
 		const result = modeConfigSchema.safeParse(newMode)
 
 		if (!result.success) {
@@ -300,9 +324,14 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 		newModeSlug,
 		newModeRoleDefinition,
 		newModeCustomInstructions,
+		newModeRules,
+		newModeCapabilities,
+		newModeObjective,
 		newModeGroups,
 		newModeSource,
 		updateCustomMode,
+		switchMode,
+		resetFormState,
 	])
 
 	const isNameOrSlugTaken = useCallback(
@@ -398,14 +427,35 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 	const handleAgentReset = (modeSlug: string, type: "roleDefinition" | "customInstructions") => {
 		// Only reset for built-in modes
-		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
-		const updatedPrompt = { ...existingPrompt }
-		delete updatedPrompt[type] // Remove the field entirely to ensure it reloads from defaults
+		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent // Cast might need update if PromptComponent changes
+		const updatedPrompt: Partial<PromptComponent> = { ...existingPrompt } // Use Partial for safety
+
+		if (
+			type === "roleDefinition" ||
+			type === "customInstructions" ||
+			type === "rules" ||
+			type === "capabilities" ||
+			type === "objective"
+		) {
+			delete updatedPrompt[type as keyof PromptComponent] // Ensure type is a key of PromptComponent
+		}
 
 		vscode.postMessage({
 			type: "updatePrompt",
 			promptMode: modeSlug,
-			customPrompt: updatedPrompt,
+			customPrompt: updatedPrompt as PromptComponent, // Cast back after deletion
+		})
+	}
+
+	const handleAgentSectionReset = (modeSlug: string, section: "rules" | "capabilities" | "objective") => {
+		const existingPrompt = customModePrompts?.[modeSlug] as PromptComponent
+		const updatedPrompt: Partial<PromptComponent> = { ...existingPrompt }
+		delete updatedPrompt[section]
+
+		vscode.postMessage({
+			type: "updatePrompt",
+			promptMode: modeSlug,
+			customPrompt: updatedPrompt as PromptComponent,
 		})
 	}
 
@@ -672,7 +722,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								return (
 									customMode?.roleDefinition ??
 									prompt?.roleDefinition ??
-									getRoleDefinition(visualMode)
+									getRoleDefinition(visualMode, customModes) // Pass customModes
 								)
 							})()}
 							onChange={(e) => {
@@ -854,7 +904,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 								return (
 									customMode?.customInstructions ??
 									prompt?.customInstructions ??
-									getCustomInstructions(mode, customModes)
+									getCustomInstructions(visualMode, customModes) // Use visualMode, pass customModes
 								)
 							})()}
 							onChange={(e) => {
@@ -913,9 +963,182 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							/>
 						</div>
 					</div>
+
+					{/* Mode-specific Rules */}
+					<div className="mb-2">
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">
+								{t("prompts:rules.label", { defaultValue: "Mode-specific Rules" })}
+							</div>
+							{!findModeBySlug(visualMode, customModes) && ( // Only show reset for built-in modes
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentSectionReset(currentMode.slug, "rules")
+										}
+									}}
+									title={t("prompts:rules.resetToDefault", {
+										defaultValue: "Revert to default rules",
+									})}
+									data-testid="mode-rules-reset">
+									<RotateCcw className="w-4 h-4" />
+								</Button>
+							)}
+						</div>
+						<div className="text-[13px] text-vscode-descriptionForeground mb-2">
+							{t("prompts:rules.description", {
+								defaultValue: "Define specific rules for this mode. Leave empty to use default rules.",
+							})}
+						</div>
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return customMode?.rules ?? prompt?.rules ?? defaultRules ?? ""
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								setModeRules(visualMode, value.trim() || undefined)
+							}}
+							rows={4}
+							className="w-full resize-y"
+							placeholder={
+								defaultRules
+									? t("prompts:rules.placeholder", {
+											defaultValue: `Defaults to:\n${defaultRules.substring(0, 100)}${defaultRules.length > 100 ? "..." : ""}`,
+										})
+									: t("prompts:rules.noDefaultPlaceholder", {
+											defaultValue: "No default rules defined. Add custom rules here.",
+										})
+							}
+							data-testid={`${getCurrentMode()?.slug || "code"}-rules-textarea`}
+						/>
+					</div>
+
+					{/* Mode-specific Capabilities */}
+					<div className="mb-2 mt-4">
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">
+								{t("prompts:capabilities.label", { defaultValue: "Mode-specific Capabilities" })}
+							</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentSectionReset(currentMode.slug, "capabilities")
+										}
+									}}
+									title={t("prompts:capabilities.resetToDefault", {
+										defaultValue: "Revert to default capabilities",
+									})}
+									data-testid="mode-capabilities-reset">
+									<RotateCcw className="w-4 h-4" />
+								</Button>
+							)}
+						</div>
+						<div className="text-[13px] text-vscode-descriptionForeground mb-2">
+							{t("prompts:capabilities.description", {
+								defaultValue:
+									"Define specific capabilities for this mode. Leave empty to use default capabilities.",
+							})}
+						</div>
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return customMode?.capabilities ?? prompt?.capabilities ?? defaultCapabilities ?? ""
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								setModeCapabilities(visualMode, value.trim() || undefined)
+							}}
+							rows={4}
+							className="w-full resize-y"
+							placeholder={
+								defaultCapabilities
+									? t("prompts:capabilities.placeholder", {
+											defaultValue: `Defaults to:\n${defaultCapabilities.substring(0, 100)}${defaultCapabilities.length > 100 ? "..." : ""}`,
+										})
+									: t("prompts:capabilities.noDefaultPlaceholder", {
+											defaultValue:
+												"No default capabilities defined. Add custom capabilities here.",
+										})
+							}
+							data-testid={`${getCurrentMode()?.slug || "code"}-capabilities-textarea`}
+						/>
+					</div>
+
+					{/* Mode-specific Objective */}
+					<div className="mb-2 mt-4">
+						<div className="flex justify-between items-center mb-1">
+							<div className="font-bold">
+								{t("prompts:objective.label", { defaultValue: "Mode-specific Objective" })}
+							</div>
+							{!findModeBySlug(visualMode, customModes) && (
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => {
+										const currentMode = getCurrentMode()
+										if (currentMode?.slug) {
+											handleAgentSectionReset(currentMode.slug, "objective")
+										}
+									}}
+									title={t("prompts:objective.resetToDefault", {
+										defaultValue: "Revert to default objective",
+									})}
+									data-testid="mode-objective-reset">
+									<RotateCcw className="w-4 h-4" />
+								</Button>
+							)}
+						</div>
+						<div className="text-[13px] text-vscode-descriptionForeground mb-2">
+							{t("prompts:objective.description", {
+								defaultValue:
+									"Define the specific objective for this mode. Leave empty to use default objective.",
+							})}
+						</div>
+						<VSCodeTextArea
+							value={(() => {
+								const customMode = findModeBySlug(visualMode, customModes)
+								const prompt = customModePrompts?.[visualMode] as PromptComponent
+								return customMode?.objective ?? prompt?.objective ?? defaultObjective ?? ""
+							})()}
+							onChange={(e) => {
+								const value =
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
+									((e as any).target as HTMLTextAreaElement).value
+								setModeObjective(visualMode, value.trim() || undefined)
+							}}
+							rows={4}
+							className="w-full resize-y"
+							placeholder={
+								defaultObjective
+									? t("prompts:objective.placeholder", {
+											defaultValue: `Defaults to:\n${defaultObjective.substring(0, 100)}${defaultObjective.length > 100 ? "..." : ""}`,
+										})
+									: t("prompts:objective.noDefaultPlaceholder", {
+											defaultValue: "No default objective defined. Add custom objective here.",
+										})
+							}
+							data-testid={`${getCurrentMode()?.slug || "code"}-objective-textarea`}
+						/>
+					</div>
 				</div>
 
-				<div className="pb-4 border-b border-vscode-input-border">
+				<div className="pb-4 border-b border-vscode-input-border mt-4">
+					{" "}
+					{/* Added mt-4 for spacing */}
 					<div className="flex gap-2">
 						<Button
 							variant="default"
@@ -948,7 +1171,6 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							<span className="codicon codicon-copy"></span>
 						</Button>
 					</div>
-
 					{/* Custom System Prompt Disclosure */}
 					<div className="mt-4">
 						<button
@@ -1258,6 +1480,54 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									</div>
 								)}
 							</div>
+							{/* New Sections in Create Mode Dialog */}
+							<div className="mb-4">
+								<div className="font-bold mb-1">
+									{t("prompts:createModeDialog.rules.label", { defaultValue: "Rules (optional)" })}
+								</div>
+								<VSCodeTextArea
+									value={newModeRules}
+									onChange={(e) => setNewModeRules((e.target as HTMLTextAreaElement).value)}
+									rows={3}
+									className="w-full resize-y"
+									placeholder={t("prompts:createModeDialog.rules.placeholder", {
+										defaultValue: "Enter mode-specific rules, or leave empty for default.",
+									})}
+								/>
+							</div>
+							<div className="mb-4">
+								<div className="font-bold mb-1">
+									{t("prompts:createModeDialog.capabilities.label", {
+										defaultValue: "Capabilities (optional)",
+									})}
+								</div>
+								<VSCodeTextArea
+									value={newModeCapabilities}
+									onChange={(e) => setNewModeCapabilities((e.target as HTMLTextAreaElement).value)}
+									rows={3}
+									className="w-full resize-y"
+									placeholder={t("prompts:createModeDialog.capabilities.placeholder", {
+										defaultValue: "Enter mode-specific capabilities, or leave empty for default.",
+									})}
+								/>
+							</div>
+							<div className="mb-4">
+								<div className="font-bold mb-1">
+									{t("prompts:createModeDialog.objective.label", {
+										defaultValue: "Objective (optional)",
+									})}
+								</div>
+								<VSCodeTextArea
+									value={newModeObjective}
+									onChange={(e) => setNewModeObjective((e.target as HTMLTextAreaElement).value)}
+									rows={3}
+									className="w-full resize-y"
+									placeholder={t("prompts:createModeDialog.objective.placeholder", {
+										defaultValue: "Enter mode-specific objective, or leave empty for default.",
+									})}
+								/>
+							</div>
+							{/* End New Sections */}
 							<div className="mb-4">
 								<div className="font-bold mb-1">{t("prompts:createModeDialog.tools.label")}</div>
 								<div className="text-[13px] text-vscode-descriptionForeground mb-2">

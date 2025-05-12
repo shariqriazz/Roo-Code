@@ -13,7 +13,10 @@ import { experimentDefault, ExperimentId } from "@roo/shared/experiments"
 import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
 
 export interface ExtensionStateContextType extends ExtensionState {
-	historyPreviewCollapsed?: boolean // Add the new state property
+	historyPreviewCollapsed?: boolean
+	defaultRules?: string // New: Default rules text
+	defaultCapabilities?: string // New: Default capabilities text
+	defaultObjective?: string // New: Default objective text
 	didHydrateState: boolean
 	showWelcome: boolean
 	theme: any
@@ -93,6 +96,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	terminalCompressProgressBar?: boolean
 	setTerminalCompressProgressBar: (value: boolean) => void
 	setHistoryPreviewCollapsed: (value: boolean) => void
+	// New setters for mode sections
+	setModeRules: (modeSlug: string, text?: string) => void
+	setModeCapabilities: (modeSlug: string, text?: string) => void
+	setModeObjective: (modeSlug: string, text?: string) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -173,6 +180,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
 	})
 
+	const [defaultRules, setDefaultRules] = useState<string | undefined>(undefined)
+	const [defaultCapabilities, setDefaultCapabilities] = useState<string | undefined>(undefined)
+	const [defaultObjective, setDefaultObjective] = useState<string | undefined>(undefined)
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
 	const [theme, setTheme] = useState<any>(undefined)
@@ -191,9 +201,21 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			const message: ExtensionMessage = event.data
 			switch (message.type) {
 				case "state": {
-					const newState = message.state!
-					setState((prevState) => mergeExtensionState(prevState, newState))
-					setShowWelcome(!checkExistKey(newState.apiConfiguration))
+					const newStateFull = message.state! as ExtensionStateContextType // Cast to include defaultXXX fields
+					const {
+						defaultRules: newDefaultRules,
+						defaultCapabilities: newDefaultCapabilities,
+						defaultObjective: newDefaultObjective,
+						...coreState
+					} = newStateFull
+
+					setState((prevState) => mergeExtensionState(prevState, coreState as ExtensionState))
+
+					if (newDefaultRules !== undefined) setDefaultRules(newDefaultRules)
+					if (newDefaultCapabilities !== undefined) setDefaultCapabilities(newDefaultCapabilities)
+					if (newDefaultObjective !== undefined) setDefaultObjective(newDefaultObjective)
+
+					setShowWelcome(!checkExistKey(coreState.apiConfiguration))
 					setDidHydrateState(true)
 					break
 				}
@@ -250,6 +272,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 	const contextValue: ExtensionStateContextType = {
 		...state,
+		defaultRules,
+		defaultCapabilities,
+		defaultObjective,
 		didHydrateState,
 		showWelcome,
 		theme,
@@ -345,7 +370,21 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 				return { ...prevState, pinnedApiConfigs: newPinned }
 			}),
 		setHistoryPreviewCollapsed: (value) =>
-			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })), // Implement the setter
+			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })),
+		// Implement new setters
+		setModeRules: (modeSlug, text) => {
+			// This will update the local state for immediate UI feedback if needed,
+			// but the primary action is to send a message to the backend.
+			// Actual state update for customModePrompts or customModes will happen
+			// when the backend broadcasts the updated ExtensionState.
+			vscode.postMessage({ type: "updateModeRules", slug: modeSlug, sectionText: text })
+		},
+		setModeCapabilities: (modeSlug, text) => {
+			vscode.postMessage({ type: "updateModeCapabilities", slug: modeSlug, sectionText: text })
+		},
+		setModeObjective: (modeSlug, text) => {
+			vscode.postMessage({ type: "updateModeObjective", slug: modeSlug, sectionText: text })
+		},
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

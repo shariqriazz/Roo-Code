@@ -233,6 +233,9 @@ export const modeConfigSchema = z.object({
 	customInstructions: z.string().optional(),
 	groups: groupEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
+	rules: z.string().optional(),
+	capabilities: z.string().optional(),
+	objective: z.string().optional(),
 })
 
 export type ModeConfig = z.infer<typeof modeConfigSchema>
@@ -270,6 +273,9 @@ export type CustomModesSettings = z.infer<typeof customModesSettingsSchema>
 export const promptComponentSchema = z.object({
 	roleDefinition: z.string().optional(),
 	customInstructions: z.string().optional(),
+	rules: z.string().optional(),
+	capabilities: z.string().optional(),
+	objective: z.string().optional(),
 })
 
 export type PromptComponent = z.infer<typeof promptComponentSchema>

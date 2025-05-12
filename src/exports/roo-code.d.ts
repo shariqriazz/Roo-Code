@@ -288,6 +288,9 @@ type GlobalSettings = {
 					  ]
 				)[]
 				source?: ("global" | "project") | undefined
+				rules?: string | undefined
+				capabilities?: string | undefined
+				objective?: string | undefined
 		  }[]
 		| undefined
 	customModePrompts?:
@@ -296,6 +299,9 @@ type GlobalSettings = {
 					| {
 							roleDefinition?: string | undefined
 							customInstructions?: string | undefined
+							rules?: string | undefined
+							capabilities?: string | undefined
+							objective?: string | undefined
 					  }
 					| undefined
 		  }

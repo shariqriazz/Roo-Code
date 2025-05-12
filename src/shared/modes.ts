@@ -1,12 +1,31 @@
 import * as vscode from "vscode"
 
-import { GroupOptions, GroupEntry, ModeConfig, PromptComponent, CustomModePrompts, ExperimentId } from "../schemas"
+import {
+	GroupOptions,
+	GroupEntry,
+	ModeConfig as ModeConfigSchema,
+	PromptComponent as PromptComponentSchema,
+	CustomModePrompts,
+	ExperimentId,
+} from "../schemas"
 import { TOOL_GROUPS, ToolGroup, ALWAYS_AVAILABLE_TOOLS } from "./tools"
 import { addCustomInstructions } from "../core/prompts/sections/custom-instructions"
 import { EXPERIMENT_IDS } from "./experiments"
 export type Mode = string
 
-export type { GroupOptions, GroupEntry, ModeConfig, PromptComponent, CustomModePrompts }
+export interface ModeConfig extends ModeConfigSchema {
+	rules?: string
+	capabilities?: string
+	objective?: string
+}
+
+export interface PromptComponent extends PromptComponentSchema {
+	rules?: string
+	capabilities?: string
+	objective?: string
+}
+
+export type { GroupOptions, GroupEntry, CustomModePrompts }
 
 // Helper to extract group name regardless of format
 export function getGroupName(group: GroupEntry): ToolGroup {
@@ -234,7 +253,12 @@ export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 			{
 				roleDefinition: mode.roleDefinition,
 				customInstructions: mode.customInstructions,
-			},
+				// Default rules, capabilities, objective will be handled by falling back to getters
+				// if these are undefined in the user's overrides.
+				rules: undefined,
+				capabilities: undefined,
+				objective: undefined,
+			} as PromptComponent, // Cast to ensure new fields are part of the type
 		]),
 	),
 )

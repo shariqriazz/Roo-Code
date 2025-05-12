@@ -9,7 +9,13 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { GlobalState, ProviderSettings, RooCodeSettings } from "../../schemas"
+import {
+	GlobalState,
+	ProviderSettings,
+	RooCodeSettings,
+	CustomModePrompts,
+	PromptComponent as PromptComponentFromSchema,
+} from "../../schemas" // Added CustomModePrompts and aliased PromptComponent
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
@@ -24,7 +30,14 @@ import { supportPrompt } from "../../shared/support-prompt"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
+import {
+	Mode,
+	PromptComponent,
+	defaultModeSlug,
+	// getModeBySlug, // Removed as unused
+	// modes as defaultModeConfigs, // Removed as unused
+	ModeConfig, // Import ModeConfig type
+} from "../../shared/modes"
 import { experimentDefault } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"
 import { Terminal } from "../../integrations/terminal/Terminal"
@@ -46,6 +59,12 @@ import { Task, TaskOptions } from "../task/Task"
 import { getNonce } from "./getNonce"
 import { getUri } from "./getUri"
 import { getSystemPromptFilePath } from "../prompts/sections/custom-system-prompt"
+import {
+	// Import section getters
+	getRulesSection,
+	getCapabilitiesSection,
+	getObjectiveSection,
+} from "../prompts/sections"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
@@ -882,6 +901,50 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		await this.postStateToWebview()
 	}
 
+	async updateModePromptSection(modeSlug: Mode, section: "rules" | "capabilities" | "objective", text?: string) {
+		const allCustomModes = await this.customModesManager.getCustomModes()
+		const customMode = allCustomModes.find((m) => m.slug === modeSlug)
+		const currentCustomModePrompts = (this.contextProxy.getValue("customModePrompts") as CustomModePrompts) || {}
+
+		if (customMode) {
+			// It's a custom mode, update it via CustomModesManager
+			const updatedModeConfig: ModeConfig = {
+				...customMode,
+				[section]: text || undefined, // Set to undefined if text is empty to clear it
+			}
+			await this.customModesManager.updateCustomMode(modeSlug, updatedModeConfig)
+			// CustomModesManager.updateCustomMode also updates the global state for customModes
+			// and triggers a file watch that should lead to postStateToWebview.
+			// If not, an explicit call might be needed, but let's assume it's handled for now.
+		} else {
+			// It's a built-in mode, update customModePrompts
+			const modePromptOverride = currentCustomModePrompts[modeSlug] || {}
+			const updatedPromptComponent: PromptComponentFromSchema = {
+				// Use aliased PromptComponent
+				...(modePromptOverride as PromptComponentFromSchema), // Cast here if necessary
+				[section]: text || undefined, // Set to undefined if text is empty
+			}
+
+			// Clean up: if all overrides are undefined or empty, remove the entry for the mode
+			if (
+				updatedPromptComponent.roleDefinition === undefined &&
+				updatedPromptComponent.customInstructions === undefined &&
+				(updatedPromptComponent.roleDefinition === undefined || updatedPromptComponent.roleDefinition === "") &&
+				(updatedPromptComponent.customInstructions === undefined ||
+					updatedPromptComponent.customInstructions === "") &&
+				(updatedPromptComponent.rules === undefined || updatedPromptComponent.rules === "") &&
+				(updatedPromptComponent.capabilities === undefined || updatedPromptComponent.capabilities === "") &&
+				(updatedPromptComponent.objective === undefined || updatedPromptComponent.objective === "")
+			) {
+				delete currentCustomModePrompts[modeSlug]
+			} else {
+				currentCustomModePrompts[modeSlug] = updatedPromptComponent
+			}
+			await this.contextProxy.setValue("customModePrompts", currentCustomModePrompts)
+		}
+		await this.postStateToWebview()
+	}
+
 	// MCP
 
 	async ensureMcpServersDirectoryExists(): Promise<string> {
@@ -1195,7 +1258,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
+			// customModes and customModePrompts will be destructured from getState()
+			// and will now contain the new optional fields if they are set.
 		} = await this.getState()
+
+		const currentModeSlug = mode ?? defaultModeSlug
+		// const currentModeConfig = getModeBySlug(currentModeSlug, customModes) ?? defaultModeConfigs.find((m: ModeConfig) => m.slug === currentModeSlug) // This variable was unused
+
+		// Determine if the current API model supports computer use.
+		// Fallback to false if api or getModel or info or supportsComputerUse is not available.
+		const currentModelSupportsComputerUse =
+			this.getCurrentCline()?.api?.getModel?.()?.info?.supportsComputerUse ?? false
+		const currentDiffStrategy = this.getCurrentCline()?.diffStrategy
+
+		// Generate default sections based on the current mode and context
+		const defaultRules = getRulesSection(this.cwd, currentModelSupportsComputerUse, currentDiffStrategy)
+		const defaultCapabilities = getCapabilitiesSection(
+			this.cwd,
+			currentModelSupportsComputerUse,
+			this.mcpHub,
+			currentDiffStrategy,
+		)
+		const defaultObjective = getObjectiveSection()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
@@ -1203,8 +1287,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const cwd = this.cwd
 
 		// Check if there's a system prompt override for the current mode
-		const currentMode = mode ?? defaultModeSlug
-		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
+		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentModeSlug)
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1259,12 +1342,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			currentApiConfigName: currentApiConfigName ?? "default",
 			listApiConfigMeta: listApiConfigMeta ?? [],
 			pinnedApiConfigs: pinnedApiConfigs ?? {},
-			mode: mode ?? defaultModeSlug,
-			customModePrompts: customModePrompts ?? {},
+			mode: currentModeSlug,
+			customModePrompts: customModePrompts ?? {}, // User overrides for built-in modes
 			customSupportPrompts: customSupportPrompts ?? {},
 			enhancementApiConfigId,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
-			customModes,
+			customModes: customModes ?? [], // User-defined custom modes
 			experiments: experiments ?? experimentDefault,
 			mcpServers: this.mcpHub?.getAllServers() ?? [],
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
@@ -1282,6 +1365,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
+			// Add default sections for UI
+			defaultRules,
+			defaultCapabilities,
+			defaultObjective,
 		}
 	}
 

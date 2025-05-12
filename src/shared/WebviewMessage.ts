@@ -131,6 +131,9 @@ export interface WebviewMessage {
 		| "searchFiles"
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
+		| "updateModeRules"
+		| "updateModeCapabilities"
+		| "updateModeObjective"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -160,6 +163,7 @@ export interface WebviewMessage {
 	hasSystemPromptOverride?: boolean
 	terminalOperation?: "continue" | "abort"
 	historyPreviewCollapsed?: boolean
+	sectionText?: string // Used for rules, capabilities, objective text
 }
 
 export const checkoutDiffPayloadSchema = z.object({

@@ -23,11 +23,12 @@ import {
 	Globe,
 	Info,
 	LucideIcon,
+	// RotateCcw removed as it was only for the deleted prompt section
 } from "lucide-react"
 
-import { ExperimentId } from "@roo/shared/experiments"
-import { TelemetrySetting } from "@roo/shared/TelemetrySetting"
 import { ApiConfiguration } from "@roo/shared/api"
+import { ExperimentId } from "@roo/shared/experiments" // Added
+import { TelemetrySetting } from "@roo/shared/TelemetrySetting" // Added
 
 import { vscode } from "@/utils/vscode"
 import { ExtensionStateContextType, useExtensionState } from "@/context/ExtensionStateContext"
@@ -99,7 +100,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const { t } = useAppTranslation()
 
 	const extensionState = useExtensionState()
-	const { currentApiConfigName, listApiConfigMeta, uriScheme, version, settingsImportedAt } = extensionState
+	const { currentApiConfigName, listApiConfigMeta, uriScheme, version, settingsImportedAt } = extensionState // Cleaned up destructuring
 
 	const [isDiscardDialogShow, setDiscardDialogShow] = useState(false)
 	const [isChangeDetected, setChangeDetected] = useState(false)
@@ -113,7 +114,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 	const prevApiConfigName = useRef(currentApiConfigName)
 	const confirmDialogHandler = useRef<() => void>()
 
-	const [cachedState, setCachedState] = useState(extensionState)
+	const [cachedState, setCachedState] = useState<ExtensionStateContextType>(extensionState) // Simplified initialization
 
 	const {
 		alwaysAllowReadOnly,
@@ -163,25 +164,20 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone, t
 
 	const apiConfiguration = useMemo(() => cachedState.apiConfiguration ?? {}, [cachedState.apiConfiguration])
 
+	// Effect to sync cachedState with extensionState when critical props change
 	useEffect(() => {
-		// Update only when currentApiConfigName is changed.
-		// Expected to be triggered by loadApiConfiguration/upsertApiConfiguration.
-		if (prevApiConfigName.current === currentApiConfigName) {
-			return
+		// Only update cachedState if there are no local unsaved changes,
+		// or if specific props that drive re-initialization change (like currentApiConfigName or settingsImportedAt)
+		if (
+			!isChangeDetected ||
+			prevApiConfigName.current !== currentApiConfigName ||
+			settingsImportedAt !== cachedState.settingsImportedAt
+		) {
+			setCachedState(extensionState)
+			prevApiConfigName.current = currentApiConfigName // Update ref after setting state
+			// setChangeDetected(false); // Resetting this might be too broad here, consider if needed
 		}
-
-		setCachedState((prevCachedState) => ({ ...prevCachedState, ...extensionState }))
-		prevApiConfigName.current = currentApiConfigName
-		setChangeDetected(false)
-	}, [currentApiConfigName, extensionState, isChangeDetected])
-
-	// Bust the cache when settings are imported.
-	useEffect(() => {
-		if (settingsImportedAt) {
-			setCachedState((prevCachedState) => ({ ...prevCachedState, ...extensionState }))
-			setChangeDetected(false)
-		}
-	}, [settingsImportedAt, extensionState])
+	}, [extensionState, currentApiConfigName, settingsImportedAt, isChangeDetected, cachedState.settingsImportedAt])
 
 	const setCachedStateField: SetCachedStateField<keyof ExtensionStateContextType> = useCallback((field, value) => {
 		setCachedState((prevState) => {

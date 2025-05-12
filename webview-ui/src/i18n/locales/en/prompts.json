@@ -40,6 +40,27 @@
 		"description": "Add behavioral guidelines specific to {{modeName}} mode.",
 		"loadFromFile": "Custom instructions specific to {{mode}} mode can also be loaded from the <span>.roo/rules-{{slug}}/</span> folder in your workspace (.roorules-{{slug}} and .clinerules-{{slug}} are deprecated and will stop working soon)."
 	},
+	"rules": {
+		"label": "Mode-specific Rules",
+		"description": "Define specific rules for this mode. Leave empty to use default rules.",
+		"resetToDefault": "Revert to default rules",
+		"placeholder": "Defaults to:\n{{defaultContent}}",
+		"noDefaultPlaceholder": "No default rules defined. Add custom rules here."
+	},
+	"capabilities": {
+		"label": "Mode-specific Capabilities",
+		"description": "Define specific capabilities for this mode. Leave empty to use default capabilities.",
+		"resetToDefault": "Revert to default capabilities",
+		"placeholder": "Defaults to:\n{{defaultContent}}",
+		"noDefaultPlaceholder": "No default capabilities defined. Add custom capabilities here."
+	},
+	"objective": {
+		"label": "Mode-specific Objective",
+		"description": "Define the specific objective for this mode. Leave empty to use default objective.",
+		"resetToDefault": "Revert to default objective",
+		"placeholder": "Defaults to:\n{{defaultContent}}",
+		"noDefaultPlaceholder": "No default objective defined. Add custom objective here."
+	},
 	"globalCustomInstructions": {
 		"title": "Custom Instructions for All Modes",
 		"description": "These instructions apply to all modes. They provide a base set of behaviors that can be enhanced by mode-specific instructions below.\nIf you would like Roo to think and speak in a different language than your editor display language ({{language}}), you can specify it here.",
@@ -138,6 +159,18 @@
 		"customInstructions": {
 			"label": "Custom Instructions (optional)",
 			"description": "Add behavioral guidelines specific to this mode."
+		},
+		"rules": {
+			"label": "Rules (optional)",
+			"placeholder": "Enter mode-specific rules, or leave empty for default."
+		},
+		"capabilities": {
+			"label": "Capabilities (optional)",
+			"placeholder": "Enter mode-specific capabilities, or leave empty for default."
+		},
+		"objective": {
+			"label": "Objective (optional)",
+			"placeholder": "Enter mode-specific objective, or leave empty for default."
 		},
 		"buttons": {
 			"cancel": "Cancel",

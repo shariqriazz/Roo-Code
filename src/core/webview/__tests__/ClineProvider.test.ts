@@ -8,7 +8,7 @@ import { ClineProvider } from "../ClineProvider"
 import { ClineMessage, ExtensionMessage, ExtensionState } from "../../../shared/ExtensionMessage"
 import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
-import { defaultModeSlug } from "../../../shared/modes"
+import { defaultModeSlug, ModeConfig } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task, TaskOptions } from "../../task/Task"
@@ -2151,5 +2151,162 @@ describe("getTelemetryProperties", () => {
 		const properties = await provider.getTelemetryProperties()
 
 		expect(properties).toHaveProperty("modelId", "claude-3-7-sonnet-20250219")
+	})
+})
+
+describe("ClineProvider Mode Prompt Sections (Rules, Capabilities, Objective)", () => {
+	let provider: ClineProvider
+	let mockContext: vscode.ExtensionContext
+	let mockWebviewView: vscode.WebviewView
+	let mockPostMessage: jest.Mock
+	let updateGlobalStateSpy: jest.SpyInstance<ContextProxy["setValue"]>
+
+	beforeEach(async () => {
+		jest.clearAllMocks()
+
+		const globalState: Record<string, any> = {
+			mode: "code",
+			currentApiConfigName: "default-config",
+			customModePrompts: {
+				code: { customInstructions: "Initial code instructions" },
+			},
+			customModes: [
+				{ slug: "my-custom-mode", name: "My Custom Mode", roleDefinition: "Custom role def", groups: [] },
+			],
+		}
+		mockContext = {
+			extensionPath: "/test/path",
+			extensionUri: {} as vscode.Uri,
+			globalState: {
+				get: jest.fn().mockImplementation((key: string) => globalState[key]),
+				update: jest.fn().mockImplementation((key: string, value: any) => {
+					globalState[key] = value
+				}),
+				keys: jest.fn().mockImplementation(() => Object.keys(globalState)),
+			},
+			secrets: { get: jest.fn(), store: jest.fn(), delete: jest.fn() },
+			subscriptions: [],
+			extension: { packageJSON: { version: "1.0.0" } },
+			globalStorageUri: { fsPath: "/test/storage/path" },
+		} as unknown as vscode.ExtensionContext
+
+		mockPostMessage = jest.fn()
+		mockWebviewView = {
+			webview: {
+				postMessage: mockPostMessage,
+				html: "",
+				options: {},
+				onDidReceiveMessage: jest.fn(),
+				asWebviewUri: jest.fn(),
+			},
+			visible: true,
+			onDidDispose: jest.fn(),
+			onDidChangeVisibility: jest.fn(),
+		} as unknown as vscode.WebviewView
+
+		provider = new ClineProvider(mockContext, {} as vscode.OutputChannel, "sidebar", new ContextProxy(mockContext))
+		// @ts-ignore - Access private property
+		updateGlobalStateSpy = jest.spyOn(provider.contextProxy, "setValue")
+
+		// Mock CustomModesManager as it's accessed internally
+		;(provider as any).customModesManager = {
+			updateCustomMode: jest.fn().mockImplementation(async (slug, modeConfig) => {
+				const currentModes = (globalState["customModes"] as ModeConfig[]) || []
+				const index = currentModes.findIndex((m) => m.slug === slug)
+				if (index !== -1) {
+					currentModes[index] = { ...currentModes[index], ...modeConfig }
+				} else {
+					currentModes.push(modeConfig)
+				}
+				globalState["customModes"] = [...currentModes] // Ensure new array instance for state change detection
+				return Promise.resolve()
+			}),
+			getCustomModes: jest.fn().mockImplementation(async () => globalState["customModes"] || []),
+			deleteCustomMode: jest.fn().mockResolvedValue(undefined),
+			dispose: jest.fn(),
+		}
+		await provider.resolveWebviewView(mockWebviewView)
+	})
+
+	test("handles updateModeRules message for a built-in mode", async () => {
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		const newRules = "These are new rules for the code mode."
+
+		await messageHandler({ type: "updateModeRules", slug: "code", sectionText: newRules })
+
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith(
+			"customModePrompts",
+			expect.objectContaining({
+				code: expect.objectContaining({
+					customInstructions: "Initial code instructions", // Ensure other parts are preserved
+					rules: newRules,
+				}),
+			}),
+		)
+		// Check if postStateToWebview was called (indirectly, by checking mockPostMessage for a "state" type message)
+		expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "state" }))
+	})
+
+	test("handles updateModeCapabilities message for a built-in mode", async () => {
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		const newCapabilities = "These are new capabilities."
+
+		await messageHandler({ type: "updateModeCapabilities", slug: "code", sectionText: newCapabilities })
+
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith(
+			"customModePrompts",
+			expect.objectContaining({
+				code: expect.objectContaining({
+					capabilities: newCapabilities,
+				}),
+			}),
+		)
+		expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "state" }))
+	})
+
+	test("handles updateModeObjective message for a built-in mode", async () => {
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		const newObjective = "This is the new objective."
+
+		await messageHandler({ type: "updateModeObjective", slug: "code", sectionText: newObjective })
+
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith(
+			"customModePrompts",
+			expect.objectContaining({
+				code: expect.objectContaining({
+					objective: newObjective,
+				}),
+			}),
+		)
+		expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "state" }))
+	})
+
+	test("handles updateModeRules message for a custom mode", async () => {
+		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
+		const newRules = "Custom rules for my-custom-mode."
+
+		await messageHandler({ type: "updateModeRules", slug: "my-custom-mode", sectionText: newRules })
+
+		// Check that CustomModesManager.updateCustomMode was called correctly
+		expect((provider as any).customModesManager.updateCustomMode).toHaveBeenCalledWith(
+			"my-custom-mode",
+			expect.objectContaining({
+				slug: "my-custom-mode",
+				name: "My Custom Mode",
+				roleDefinition: "Custom role def",
+				rules: newRules, // The new rules should be here
+			}),
+		)
+		// Check if the global state for customModes was updated (via the mock implementation of updateCustomMode)
+		expect(updateGlobalStateSpy).toHaveBeenCalledWith(
+			"customModes",
+			expect.arrayContaining([
+				expect.objectContaining({
+					slug: "my-custom-mode",
+					rules: newRules,
+				}),
+			]),
+		)
+		expect(mockPostMessage).toHaveBeenCalledWith(expect.objectContaining({ type: "state" }))
 	})
 })
