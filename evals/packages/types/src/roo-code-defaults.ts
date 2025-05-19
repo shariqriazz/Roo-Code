@@ -42,21 +42,21 @@ export const rooCodeDefaults: RooCodeSettings = {
 	terminalZshP10k: false,
 	terminalZdotdir: true,
 	terminalCompressProgressBar: true,
-	terminalShellIntegrationDisabled: false,
+	terminalShellIntegrationDisabled: true,
 
 	diffEnabled: true,
 	fuzzyMatchThreshold: 1,
-
+	modelTemperature: 0.25,
 	enableCheckpoints: false,
 
 	rateLimitSeconds: 0,
 	maxOpenTabsContext: 20,
 	maxWorkspaceFiles: 200,
 	showRooIgnoredFiles: true,
-	maxReadFileLine: 500, // -1 to enable full file reading.
+	maxReadFileLine: -1, // -1 to enable full file reading.
 
 	language: "en",
-	telemetrySetting: "enabled",
+	telemetrySetting: "disabled",
 
 	mcpEnabled: false,
 
