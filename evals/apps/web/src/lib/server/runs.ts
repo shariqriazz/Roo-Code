@@ -48,11 +48,11 @@ export async function createRun({
 	revalidatePath("/runs")
 
 	try {
-		const logFile = fs.openSync(`/tmp/roo-code-evals-${run.id}.log`, "a")
+		const logFile = fs.openSync(path.join(os.tmpdir(), `roo-code-evals-${run.id}.log`), "a")
 
 		let systemPromptFileArg: string[] = []
 		if (systemPrompt) {
-			const systemPromptFilePath = `/tmp/roo-code-system-prompt-${run.id}.txt`
+			const systemPromptFilePath = path.join(os.tmpdir(), `roo-code-system-prompt-${run.id}.txt`)
 			fs.writeFileSync(systemPromptFilePath, systemPrompt, "utf-8")
 			systemPromptFileArg = ["--systemPromptFile", systemPromptFilePath]
 		}
