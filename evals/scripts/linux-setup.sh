@@ -104,7 +104,19 @@ if ! command -v git &>/dev/null; then
 fi
 
 # Install asdf
-if ! command -v asdf &>/dev/null; then
+if command -v asdf &>/dev/null; then
+  ASDF_VERSION=$(asdf --version)
+  echo "✅ asdf is installed ($ASDF_VERSION)"
+  # Ensure asdf is sourced for the current session
+  . "$HOME/.asdf/asdf.sh"
+  . "$HOME/.asdf/completions/asdf.bash"
+elif [[ -d "$HOME/.asdf" ]]; then
+  echo "⚠️ asdf directory found but command not in PATH. Sourcing asdf..."
+  . "$HOME/.asdf/asdf.sh"
+  . "$HOME/.asdf/completions/asdf.bash"
+  ASDF_VERSION=$(asdf --version)
+  echo "✅ asdf is now sourced ($ASDF_VERSION)"
+else
   read -p "🛠️ asdf (https://asdf-vm.com) is required. Install it? (Y/n): " install_asdf
 
   if [[ "$install_asdf" =~ ^[Yy]|^$ ]]; then
@@ -133,12 +145,6 @@ if ! command -v asdf &>/dev/null; then
   else
     exit 1
   fi
-else
-  ASDF_VERSION=$(asdf --version)
-  echo "✅ asdf is installed ($ASDF_VERSION)"
-  # Ensure asdf is sourced for the current session
-  . "$HOME/.asdf/asdf.sh"
-  . "$HOME/.asdf/completions/asdf.bash"
 fi
 
 # Install GitHub CLI
@@ -179,9 +185,17 @@ if ! command -v pnpm &>/dev/null; then
   else
     exit 1
   fi
+  # Source pnpm for current session
+  if [[ -f "$HOME/.local/share/pnpm/setup.sh" ]]; then
+    source "$HOME/.local/share/pnpm/setup.sh" || { echo "❌ Failed to source pnpm setup script."; exit 1; }
+  fi
 else
   PNPM_VERSION=$(pnpm --version)
   echo "✅ pnpm is installed ($PNPM_VERSION)"
+  # Ensure pnpm is sourced for the current session if it was already installed
+  if [[ -f "$HOME/.local/share/pnpm/setup.sh" ]]; then
+    source "$HOME/.local/share/pnpm/setup.sh" || { echo "❌ Failed to source pnpm setup script."; exit 1; }
+  fi
 fi
 
 # Install VS Code
@@ -246,6 +260,23 @@ for i in "${!options[@]}"; do
 
   "python")
     if ! command -v python &>/dev/null || [[ $(python --version 2>&1) != *"Python 3.13.2"* ]]; then
+      echo "📦 Installing Python build dependencies..."
+      if command -v apt &>/dev/null; then
+        sudo apt update && sudo apt install -y build-essential libssl-dev zlib1g-dev \
+        libbz2-dev libreadline-dev libsqlite3-dev libncursesw5-dev libffi-dev tk-dev \
+        libxml2-dev libxmlsec1-dev liblzma-dev || exit 1
+      elif command -v dnf &>/dev/null; then
+        sudo dnf install -y @development-tools openssl-devel zlib-devel bzip2-devel \
+        readline-devel sqlite-devel ncurses-devel libffi-devel tk-devel xz-devel || exit 1
+      elif command -v yum &>/dev/null; then
+        sudo yum install -y @development openssl-devel zlib-devel bzip2-devel \
+        readline-devel sqlite-devel ncurses-devel libffi-devel tk-devel xz-devel || exit 1
+      else
+        echo "⚠️ Could not find apt, dnf, or yum. Please install Python build dependencies manually."
+        exit 1
+      fi
+      echo "✅ Python build dependencies installed."
+
       echo "📦 Installing Python 3.13.2 via asdf..."
       asdf install python 3.13.2 || exit 1
       asdf global python 3.13.2 || exit 1 # Use global for consistency
