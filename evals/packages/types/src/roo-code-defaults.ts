@@ -4,7 +4,7 @@ export const rooCodeDefaults: RooCodeSettings = {
 	apiProvider: "openrouter",
 	openRouterUseMiddleOutTransform: false,
 
-	lastShownAnnouncementId: "may-06-2025-3-16",
+	lastShownAnnouncementId: "may-14-2025-3-17",
 
 	pinnedApiConfigs: {},
 
