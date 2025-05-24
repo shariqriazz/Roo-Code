@@ -1,4 +1,4 @@
-import EventEmitter from "node:events"
+import EventEmitter from "events"
 import * as crypto from "node:crypto"
 
 import ipc from "node-ipc"
@@ -94,8 +94,16 @@ export class IpcClient extends EventEmitter<IpcClientEvents> {
 
 	public disconnect() {
 		try {
+			// Remove all event listeners to prevent memory leaks
+			ipc.of[this._id]?.off("connect", this.onConnect)
+			ipc.of[this._id]?.off("disconnect", this.onDisconnect)
+			ipc.of[this._id]?.off("message", this.onMessage)
+
 			ipc.disconnect(this._id)
-			// @TODO: Should we set _disconnect here?
+			this._isConnected = false
+			this._clientId = undefined
+			// Explicitly remove the reference from ipc.of
+			delete ipc.of[this._id]
 		} catch (error) {
 			this.log("[client#disconnect] error disconnecting", error)
 		}

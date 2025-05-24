@@ -167,6 +167,8 @@ const run = async (toolbox: GluegunToolbox) => {
 	const result = await finishRun(run.id)
 	console.log(`${Date.now()} [cli#run]`, result)
 
+	server.close()
+
 	await execa({ cwd: exercisesPath })`git add .`
 	await execa({ cwd: exercisesPath })`git commit -m ${`Run #${run.id}`} --no-verify`
 }
@@ -194,11 +196,12 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 
 	console.log(`${Date.now()} [cli#runExercise] Opening new VS Code window at ${workspacePath}`)
 
-	await execa({
+	const subprocess = execa({
 		env: {
 			ROO_CODE_IPC_SOCKET_PATH: taskSocketPath,
 		},
 		shell: "/bin/bash",
+		detached: true, // Detach the child process to allow the parent to exit independently
 	})`code --disable-workspace-trust -n ${workspacePath}`
 
 	// Give VSCode some time to spawn before connecting to its unix socket.
@@ -363,6 +366,42 @@ const runExercise = async ({ run, task, server }: { run: Run; task: Task; server
 		}
 
 		client.disconnect()
+	}
+
+	// Ensure the VS Code process is terminated
+	if (subprocess.pid) {
+		try {
+			const descendants = await new Promise<number[]>((resolve, reject) => {
+				psTree(subprocess.pid!, (err, children) => {
+					if (err) {
+						reject(err)
+					}
+					resolve(children.map((p) => parseInt(p.PID)))
+				})
+			})
+
+			console.log(
+				`${Date.now()} [cli#runExercise | ${language} / ${exercise}] Killing VS Code process ${subprocess.pid} and its descendants: ${JSON.stringify(descendants)}`,
+			)
+
+			for (const descendant of descendants) {
+				try {
+					await execa`kill -9 ${descendant}`
+				} catch (error) {
+					console.error(
+						`${Date.now()} [cli#runExercise | ${language} / ${exercise}] Error killing descendant process ${descendant}:`,
+						error,
+					)
+				}
+			}
+
+			await execa`kill -9 ${subprocess.pid}`
+		} catch (error) {
+			console.error(
+				`${Date.now()} [cli#runExercise | ${language} / ${exercise}] Error killing VS Code process:`,
+				error,
+			)
+		}
 	}
 
 	return { success: !!taskFinishedAt }

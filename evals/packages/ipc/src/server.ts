@@ -1,4 +1,4 @@
-import EventEmitter from "node:events"
+import EventEmitter from "events"
 import { Socket } from "node:net"
 import * as crypto from "node:crypto"
 
@@ -127,5 +127,14 @@ export class IpcServer extends EventEmitter<IpcServerEvents> {
 
 	public get isListening() {
 		return this._isListening
+	}
+
+	public close() {
+		if (this._isListening) {
+			ipc.server.stop()
+			this._isListening = false
+			this._clients.clear() // Clear clients map on close
+			this.log("[server#close] IPC server stopped and clients cleared.")
+		}
 	}
 }
