@@ -1,6 +1,8 @@
 import { ToolArgs } from "./types"
 
-export function getBrowserActionDescription(args: ToolArgs): string | undefined {
+export function getBrowserActionDescription(
+	args: ToolArgs = { cwd: "", supportsComputerUse: false },
+): string | undefined {
 	if (!args.supportsComputerUse) {
 		return undefined
 	}

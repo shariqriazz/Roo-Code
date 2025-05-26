@@ -106,6 +106,7 @@ ${getToolDescriptionsForMode(
 	mode,
 	cwd,
 	supportsComputerUse,
+	undefined, // Placeholder for codeIndexManager
 	effectiveDiffStrategy,
 	browserViewportSize,
 	mcpHub,
@@ -157,7 +158,7 @@ export const SYSTEM_PROMPT = async (
 	supportsComputerUse: boolean,
 	mcpHub?: McpHub,
 	diffStrategy?: DiffStrategy,
-	browserViewportSize?: string,
+	browserViewportSize: string | undefined = supportsComputerUse ? "1280x800" : undefined,
 	mode: Mode = defaultModeSlug,
 	customModePrompts?: CustomModePrompts,
 	customModes?: ModeConfig[],

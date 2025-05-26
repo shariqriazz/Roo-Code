@@ -147,10 +147,12 @@ export const defaultModeSlug = modes[0].slug
 
 // Helper functions
 export function getModeBySlug(slug: string, customModes?: ModeConfig[]): ModeConfig | undefined {
-	// Check custom modes first
-	const customMode = customModes?.find((mode) => mode.slug === slug)
-	if (customMode) {
-		return customMode
+	// Check custom modes first, ensure it's an array before calling find
+	if (Array.isArray(customModes)) {
+		const customMode = customModes.find((mode) => mode.slug === slug)
+		if (customMode) {
+			return customMode
+		}
 	}
 	// Then check built-in modes
 	return modes.find((mode) => mode.slug === slug)
