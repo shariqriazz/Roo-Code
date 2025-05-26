@@ -59,6 +59,9 @@ export interface WebviewMessage {
 		| "alwaysAllowModeSwitch"
 		| "allowedMaxRequests"
 		| "alwaysAllowSubtasks"
+		| "autoCondenseContextPercent"
+		| "condensingApiConfigId"
+		| "updateCondensingPrompt"
 		| "playSound"
 		| "playTts"
 		| "stopTts"
@@ -132,6 +135,12 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 		| "setHistoryPreviewCollapsed"
 		| "condenseTaskContextRequest"
+		| "requestIndexingStatus"
+		| "startIndexing"
+		| "clearIndexData"
+		| "indexingStatusUpdate"
+		| "indexCleared"
+		| "codebaseIndexConfig"
 	text?: string
 	disabled?: boolean
 	askResponse?: ClineAskResponse
@@ -180,4 +189,18 @@ export const checkoutRestorePayloadSchema = z.object({
 
 export type CheckpointRestorePayload = z.infer<typeof checkoutRestorePayloadSchema>
 
-export type WebViewMessagePayload = CheckpointDiffPayload | CheckpointRestorePayload
+export interface IndexingStatusPayload {
+	state: "Standby" | "Indexing" | "Indexed" | "Error"
+	message: string
+}
+
+export interface IndexClearedPayload {
+	success: boolean
+	error?: string
+}
+
+export type WebViewMessagePayload =
+	| CheckpointDiffPayload
+	| CheckpointRestorePayload
+	| IndexingStatusPayload
+	| IndexClearedPayload

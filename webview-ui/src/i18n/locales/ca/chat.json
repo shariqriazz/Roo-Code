@@ -11,7 +11,7 @@
 		"closeAndStart": "Tancar tasca i iniciar-ne una de nova",
 		"export": "Exportar historial de tasques",
 		"delete": "Eliminar tasca (Shift + Clic per ometre confirmació)",
-		"condenseContext": "Condensar context de la tasca"
+		"condenseContext": "Condensar context de forma intel·ligent"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -70,7 +70,7 @@
 		"tooltip": "Cancel·la l'operació actual"
 	},
 	"scrollToBottom": "Desplaça't al final del xat",
-	"about": "Genera, refactoritza i depura codi amb l'ajuda de la IA.<br />Consulta la nostra <DocsLink>documentació</DocsLink> per obtenir més informació.",
+	"about": "Genera, refactoritza i depura codi amb l'ajuda de la IA. Consulta la nostra <DocsLink>documentació</DocsLink> per obtenir més informació.",
 	"onboarding": "<strong> La vostra llista de tasques en aquest espai de treball està buida. </strong> Comença escrivint una tasca a continuació. \nNo esteu segur per on començar? \nMés informació sobre què pot fer Roo als documents.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -211,9 +211,9 @@
 		"title": "🎉 Roo Code {{version}} publicat",
 		"description": "Roo Code {{version}} porta noves funcionalitats potents i millores basades en els teus comentaris.",
 		"whatsNew": "Novetats",
-		"feature1": "<bold>Emmagatzematge en caché implícit per a Gemini</bold>: Les crides a l'API de Gemini ara s'emmagatzemen automàticament en caché, reduint els costos d'API",
-		"feature2": "<bold>Selecció de mode més intel·ligent</bold>: Les definicions de mode ara poden incloure orientació sobre quan s'ha d'utilitzar cada mode, permetent una millor orquestració",
-		"feature3": "<bold>Condensació intel·ligent del context</bold>: Resumeix de manera intel·ligent l'historial de converses quan el context s'omple en lloc de truncar-lo (activa-ho a Configuració -> Experimental)",
+		"feature1": "<bold>Models de vista prèvia Gemini 2.5 Flash</bold>: Accedeix als darrers models Gemini Flash per a respostes més ràpides i eficients",
+		"feature2": "<bold>Condensació intel·ligent de context</bold>: Nou botó a la capçalera de tasques que et permet condensar intel·ligentment el contingut amb retroalimentació visual",
+		"feature3": "<bold>Suport YAML per a definicions de mode</bold>: Crea i personalitza modes més fàcilment amb suport YAML",
 		"hideButton": "Amagar anunci",
 		"detailsDiscussLinks": "Obtingues més detalls i participa a <discordLink>Discord</discordLink> i <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -260,5 +260,10 @@
 			"description": "Roo ha arribat al límit aprovat automàticament de {{count}} sol·licitud(s) d'API. Vols reiniciar el comptador i continuar amb la tasca?",
 			"button": "Reiniciar i continuar"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo vol cercar a la base de codi <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo vol cercar a la base de codi <code>{{query}}</code> a <code>{{path}}</code>:",
+		"didSearch": "S'han trobat {{count}} resultat(s) per a <code>{{query}}</code>:"
 	}
 }

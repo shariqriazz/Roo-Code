@@ -11,7 +11,7 @@
 		"closeAndStart": "Fechar tarefa e iniciar nova",
 		"export": "Exportar histórico de tarefas",
 		"delete": "Excluir tarefa (Shift + Clique para pular confirmação)",
-		"condenseContext": "Condensar contexto da tarefa"
+		"condenseContext": "Condensar contexto de forma inteligente"
 	},
 	"unpin": "Desfixar",
 	"pin": "Fixar",
@@ -70,7 +70,7 @@
 		"tooltip": "Cancelar a operação atual"
 	},
 	"scrollToBottom": "Rolar para o final do chat",
-	"about": "Gere, refatore e depure código com assistência de IA.<br />Confira nossa <DocsLink>documentação</DocsLink> para saber mais.",
+	"about": "Gere, refatore e depure código com assistência de IA. Confira nossa <DocsLink>documentação</DocsLink> para saber mais.",
 	"onboarding": "<strong>Sua lista de tarefas neste espaço de trabalho está vazia.</strong> Comece digitando uma tarefa abaixo. Não sabe como começar? Leia mais sobre o que o Roo pode fazer por você nos <DocsLink>documentos</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -211,9 +211,9 @@
 		"title": "🎉 Roo Code {{version}} Lançado",
 		"description": "Roo Code {{version}} traz poderosos novos recursos e melhorias baseados no seu feedback.",
 		"whatsNew": "O que há de novo",
-		"feature1": "<bold>Cache implícito para Gemini</bold>: Chamadas de API Gemini agora são automaticamente armazenadas em cache, reduzindo custos de API",
-		"feature2": "<bold>Seleção de modo mais inteligente</bold>: Definições de modo podem agora incluir orientações sobre quando cada modo deve ser usado, permitindo melhor orquestração",
-		"feature3": "<bold>Condensação inteligente de contexto</bold>: Resume de forma inteligente o histórico de conversas quando o contexto fica cheio, em vez de truncar (ative em Configurações -> Experimental)",
+		"feature1": "<bold>Modelos de Pré-visualização Gemini 2.5 Flash</bold>: Acesse os mais recentes modelos Gemini Flash para respostas mais rápidas e eficientes",
+		"feature2": "<bold>Condensação Inteligente de Contexto</bold>: Novo botão no cabeçalho da tarefa permite condensar conteúdo de forma inteligente com feedback visual",
+		"feature3": "<bold>Suporte YAML para Definições de Modo</bold>: Crie e personalize modos mais facilmente com suporte a YAML",
 		"hideButton": "Ocultar anúncio",
 		"detailsDiscussLinks": "Obtenha mais detalhes e participe da discussão no <discordLink>Discord</discordLink> e <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -260,5 +260,10 @@
 			"description": "Roo atingiu o limite auto-aprovado de {{count}} solicitação(ões) de API. Deseja redefinir a contagem e prosseguir com a tarefa?",
 			"button": "Redefinir e Continuar"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo quer pesquisar na base de código por <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo quer pesquisar na base de código por <code>{{query}}</code> em <code>{{path}}</code>:",
+		"didSearch": "Encontrado {{count}} resultado(s) para <code>{{query}}</code>:"
 	}
 }

@@ -39,6 +39,8 @@ import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
+import { CodeIndexManager } from "../../services/code-index/manager"
+import type { IndexProgressUpdate } from "../../services/code-index/interfaces/manager"
 import { fileExistsAtPath } from "../../utils/fs"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
@@ -53,6 +55,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -73,6 +76,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	private disposables: vscode.Disposable[] = []
 	private view?: vscode.WebviewView | vscode.WebviewPanel
 	private clineStack: Task[] = []
+	private codeIndexStatusSubscription?: vscode.Disposable
 	private _workspaceTracker?: WorkspaceTracker // workSpaceTracker read-only for access outside this class
 	public get workspaceTracker(): WorkspaceTracker | undefined {
 		return this._workspaceTracker
@@ -81,7 +85,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "may-14-2025-3-17" // Update for v3.17.0 announcement
+	public readonly latestAnnouncementId = "may-21-2025-3-18" // Update for v3.18.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -90,11 +94,18 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		private readonly outputChannel: vscode.OutputChannel,
 		private readonly renderContext: "sidebar" | "editor" = "sidebar",
 		public readonly contextProxy: ContextProxy,
+		public readonly codeIndexManager?: CodeIndexManager,
 	) {
 		super()
 
 		this.log("ClineProvider instantiated")
 		ClineProvider.activeInstances.add(this)
+
+		this.codeIndexManager = codeIndexManager
+		this.updateGlobalState("codebaseIndexModels", EMBEDDING_MODEL_PROFILES)
+
+		// Start configuration loading (which might trigger indexing) in the background.
+		// Don't await, allowing activation to continue immediately.
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
@@ -144,7 +155,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// Pop the top Cline instance from the stack.
-		var cline = this.clineStack.pop()
+		let cline = this.clineStack.pop()
 
 		if (cline) {
 			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
@@ -320,10 +331,6 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
 		this.log("Resolving webview view")
 
-		if (!this.contextProxy.isInitialized) {
-			await this.contextProxy.initialize()
-		}
-
 		this.view = webviewView
 
 		// Set panel reference according to webview type
@@ -382,6 +389,18 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Sets up an event listener to listen for messages passed from the webview view context
 		// and executes code based on the message that is recieved
 		this.setWebviewMessageListener(webviewView.webview)
+
+		// Subscribe to code index status updates if the manager exists
+		if (this.codeIndexManager) {
+			this.codeIndexStatusSubscription = this.codeIndexManager.onProgressUpdate((update: IndexProgressUpdate) => {
+				this.postMessageToWebview({
+					type: "indexingStatusUpdate",
+					values: update,
+				})
+			})
+			// Add the subscription to the main disposables array
+			this.disposables.push(this.codeIndexStatusSubscription)
+		}
 
 		// Logs show up in bottom panel > Debug Console
 		//console.log("registering listener")
@@ -572,21 +591,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"index.css",
 		])
 
-		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, [
-			"node_modules",
-			"@vscode",
-			"codicons",
-			"dist",
-			"codicon.css",
-		])
-
+		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "codicons", "codicon.css"])
 		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
-			"node_modules",
+			"assets",
 			"vscode-material-icons",
-			"generated",
 			"icons",
 		])
-
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 		const audioUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "audio"])
 
@@ -660,39 +670,16 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			"assets",
 			"index.css",
 		])
-		// The JS file from the React build output
+
 		const scriptUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "build", "assets", "index.js"])
-
-		// The codicon font from the React build output
-		// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-codicons-sample/src/extension.ts
-		// we installed this package in the extension so that we can access it how its intended from the extension (the font file is likely bundled in vscode), and we just import the css fileinto our react app we don't have access to it
-		// don't forget to add font-src ${webview.cspSource};
-		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, [
-			"node_modules",
-			"@vscode",
-			"codicons",
-			"dist",
-			"codicon.css",
-		])
-
-		// The material icons from the React build output
+		const codiconsUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "codicons", "codicon.css"])
 		const materialIconsUri = getUri(webview, this.contextProxy.extensionUri, [
-			"node_modules",
+			"assets",
 			"vscode-material-icons",
-			"generated",
 			"icons",
 		])
-
 		const imagesUri = getUri(webview, this.contextProxy.extensionUri, ["assets", "images"])
 		const audioUri = getUri(webview, this.contextProxy.extensionUri, ["webview-ui", "audio"])
-
-		// const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "main.js"))
-
-		// const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "reset.css"))
-		// const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "vscode.css"))
-
-		// // Same for stylesheet
-		// const stylesheetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "assets", "main.css"))
 
 		// Use a nonce to only allow a specific script to be run.
 		/*
@@ -836,6 +823,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					this.providerSettingsManager.setModeConfig(mode, id),
 					this.contextProxy.setProviderSettings(providerSettings),
 				])
+
+				// Notify CodeIndexManager about the settings change
+				if (this.codeIndexManager) {
+					await this.codeIndexManager.handleExternalSettingsChange()
+				}
 
 				// Change the provider for the current task.
 				// TODO: We should rename `buildApiHandler` for clarity (e.g. `getProviderClient`).
@@ -1222,6 +1214,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowModeSwitch,
 			alwaysAllowSubtasks,
 			allowedMaxRequests,
+			autoCondenseContextPercent,
 			soundEnabled,
 			ttsEnabled,
 			ttsSpeed,
@@ -1268,6 +1261,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxReadFileLine,
 			terminalCompressProgressBar,
 			historyPreviewCollapsed,
+			condensingApiConfigId,
+			customCondensingPrompt,
+			codebaseIndexConfig,
+			codebaseIndexModels,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
@@ -1292,7 +1289,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowMcp: alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
-			allowedMaxRequests: allowedMaxRequests ?? Infinity,
+			allowedMaxRequests,
+			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.getCurrentCline()?.taskId
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
@@ -1351,11 +1349,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language: language ?? formatLanguage(vscode.env.language),
 			renderContext: this.renderContext,
-			maxReadFileLine: maxReadFileLine ?? 500,
+			maxReadFileLine: maxReadFileLine ?? -1,
 			settingsImportedAt: this.settingsImportedAt,
 			terminalCompressProgressBar: terminalCompressProgressBar ?? true,
 			hasSystemPromptOverride,
 			historyPreviewCollapsed: historyPreviewCollapsed ?? false,
+			condensingApiConfigId,
+			customCondensingPrompt,
+			codebaseIndexModels: codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
+			codebaseIndexConfig: codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "http://localhost:6333",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 	}
 
@@ -1395,7 +1403,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
 			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
-			allowedMaxRequests: stateValues.allowedMaxRequests ?? Infinity,
+			allowedMaxRequests: stateValues.allowedMaxRequests,
+			autoCondenseContextPercent: stateValues.autoCondenseContextPercent ?? 100,
 			taskHistory: stateValues.taskHistory,
 			allowedCommands: stateValues.allowedCommands,
 			soundEnabled: stateValues.soundEnabled ?? false,
@@ -1444,8 +1453,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
 			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
-			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
+			maxReadFileLine: stateValues.maxReadFileLine ?? -1,
 			historyPreviewCollapsed: stateValues.historyPreviewCollapsed ?? false,
+			// Explicitly add condensing settings
+			condensingApiConfigId: stateValues.condensingApiConfigId,
+			customCondensingPrompt: stateValues.customCondensingPrompt,
+			codebaseIndexModels: stateValues.codebaseIndexModels ?? EMBEDDING_MODEL_PROFILES,
+			codebaseIndexConfig: stateValues.codebaseIndexConfig ?? {
+				codebaseIndexEnabled: false,
+				codebaseIndexQdrantUrl: "http://localhost:6333",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderBaseUrl: "",
+				codebaseIndexEmbedderModelId: "",
+			},
 		}
 	}
 

@@ -11,7 +11,7 @@
 		"closeAndStart": "Taak sluiten en een nieuwe starten",
 		"export": "Taakgeschiedenis exporteren",
 		"delete": "Taak verwijderen (Shift + Klik om bevestiging over te slaan)",
-		"condenseContext": "Taakcontext samenvatten"
+		"condenseContext": "Context intelligent samenvatten"
 	},
 	"unpin": "Losmaken",
 	"pin": "Vastmaken",
@@ -70,7 +70,7 @@
 		"tooltip": "Annuleer de huidige bewerking"
 	},
 	"scrollToBottom": "Scroll naar onderaan de chat",
-	"about": "Genereer, refactor en debug code met AI-assistentie.<br />Bekijk onze <DocsLink>documentatie</DocsLink> voor meer informatie.",
+	"about": "Genereer, refactor en debug code met AI-assistentie. Bekijk onze <DocsLink>documentatie</DocsLink> voor meer informatie.",
 	"onboarding": "Je takenlijst in deze werkruimte is leeg.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -198,9 +198,9 @@
 	"announcement": {
 		"title": "🎉 Roo Code {{version}} uitgebracht",
 		"description": "Roo Code {{version}} brengt krachtige nieuwe functies en verbeteringen op basis van jouw feedback.",
-		"feature1": "<bold>Impliciete caching voor Gemini</bold>: Gemini API-aanroepen worden nu automatisch gecachet, waardoor API-kosten worden verlaagd",
-		"feature2": "<bold>Slimmere modusselectie</bold>: Modusdefinities kunnen nu richtlijnen bevatten over wanneer elke modus moet worden gebruikt, wat betere orchestratie mogelijk maakt",
-		"feature3": "<bold>Intelligente contextcompressie</bold>: Vat gespreksgeschiedenis intelligent samen wanneer de context vol raakt in plaats van deze af te kappen (inschakelen in Instellingen -> Experimenteel)",
+		"feature1": "<bold>Gemini 2.5 Flash preview-modellen</bold>: Toegang tot de nieuwste Gemini Flash-modellen voor snellere en efficiëntere antwoorden",
+		"feature2": "<bold>Intelligente contextcompressie</bold>: Nieuwe knop in de taakheader waarmee je content intelligent kunt comprimeren met visuele feedback",
+		"feature3": "<bold>YAML-ondersteuning voor modusdefinities</bold>: Maak en pas modi eenvoudiger aan met YAML-ondersteuning",
 		"hideButton": "Aankondiging verbergen",
 		"detailsDiscussLinks": "Meer details en discussie in <discordLink>Discord</discordLink> en <redditLink>Reddit</redditLink> 🚀",
 		"whatsNew": "Wat is er nieuw"
@@ -260,5 +260,10 @@
 			"description": "Roo heeft de automatisch goedgekeurde limiet van {{count}} API-verzoek(en) bereikt. Wil je de teller resetten en doorgaan met de taak?",
 			"button": "Resetten en doorgaan"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo wil de codebase doorzoeken op <code>{{query}}</code>:",
+		"wantsToSearchWithPath": "Roo wil de codebase doorzoeken op <code>{{query}}</code> in <code>{{path}}</code>:",
+		"didSearch": "{{count}} resultaat/resultaten gevonden voor <code>{{query}}</code>:"
 	}
 }

@@ -11,7 +11,7 @@
 		"closeAndStart": "Fermer la tâche et en commencer une nouvelle",
 		"export": "Exporter l'historique des tâches",
 		"delete": "Supprimer la tâche (Shift + Clic pour ignorer la confirmation)",
-		"condenseContext": "Condenser le contexte de la tâche"
+		"condenseContext": "Condenser intelligemment le contexte"
 	},
 	"unpin": "Désépingler",
 	"pin": "Épingler",
@@ -70,7 +70,7 @@
 		"tooltip": "Annuler l'opération actuelle"
 	},
 	"scrollToBottom": "Défiler jusqu'au bas du chat",
-	"about": "Générer, refactoriser et déboguer du code avec l'assistance de l'IA.<br />Consultez notre <DocsLink>documentation</DocsLink> pour en savoir plus.",
+	"about": "Générer, refactoriser et déboguer du code avec l'assistance de l'IA. Consultez notre <DocsLink>documentation</DocsLink> pour en savoir plus.",
 	"onboarding": "Grâce aux dernières avancées en matière de capacités de codage agent, je peux gérer des tâches complexes de développement logiciel étape par étape. Avec des outils qui me permettent de créer et d'éditer des fichiers, d'explorer des projets complexes, d'utiliser le navigateur et d'exécuter des commandes de terminal (après votre autorisation), je peux vous aider de manières qui vont au-delà de la complétion de code ou du support technique. Je peux même utiliser MCP pour créer de nouveaux outils et étendre mes propres capacités.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -211,9 +211,9 @@
 		"title": "🎉 Roo Code {{version}} est sortie",
 		"description": "Roo Code {{version}} apporte de puissantes nouvelles fonctionnalités et améliorations basées sur vos retours.",
 		"whatsNew": "Quoi de neuf",
-		"feature1": "<bold>Mise en cache implicite pour Gemini</bold> : Les appels à l'API Gemini sont désormais automatiquement mis en cache, réduisant les coûts d'API",
-		"feature2": "<bold>Sélection de mode plus intelligente</bold> : Les définitions de mode peuvent maintenant inclure des indications sur quand chaque mode doit être utilisé, permettant une meilleure orchestration",
-		"feature3": "<bold>Condensation intelligente du contexte</bold> : Résume intelligemment l'historique des conversations lorsque le contexte se remplit au lieu de le tronquer (activer dans Paramètres -> Expérimental)",
+		"feature1": "<bold>Modèles de prévisualisation Gemini 2.5 Flash</bold> : Accédez aux derniers modèles Gemini Flash pour des réponses plus rapides et plus efficaces",
+		"feature2": "<bold>Condensation intelligente du contexte</bold> : Nouveau bouton dans l'en-tête de tâche qui vous permet de condenser intelligemment le contenu avec un retour visuel",
+		"feature3": "<bold>Support YAML pour les définitions de mode</bold> : Créez et personnalisez les modes plus facilement avec le support YAML",
 		"hideButton": "Masquer l'annonce",
 		"detailsDiscussLinks": "Obtenez plus de détails et participez aux discussions sur <discordLink>Discord</discordLink> et <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -260,5 +260,10 @@
 			"description": "Roo a atteint la limite auto-approuvée de {{count}} requête(s) API. Souhaitez-vous réinitialiser le compteur et poursuivre la tâche ?",
 			"button": "Réinitialiser et continuer"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo veut rechercher dans la base de code <code>{{query}}</code> :",
+		"wantsToSearchWithPath": "Roo veut rechercher dans la base de code <code>{{query}}</code> dans <code>{{path}}</code> :",
+		"didSearch": "{{count}} résultat(s) trouvé(s) pour <code>{{query}}</code> :"
 	}
 }

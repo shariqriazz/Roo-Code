@@ -11,7 +11,7 @@
 		"closeAndStart": "Aufgabe schließen und neue starten",
 		"export": "Aufgabenverlauf exportieren",
 		"delete": "Aufgabe löschen (Shift + Klick zum Überspringen der Bestätigung)",
-		"condenseContext": "Task-Kontext komprimieren"
+		"condenseContext": "Kontext intelligent komprimieren"
 	},
 	"unpin": "Lösen von oben",
 	"pin": "Anheften",
@@ -70,7 +70,7 @@
 		"tooltip": "Aktuelle Operation abbrechen"
 	},
 	"scrollToBottom": "Zum Chat-Ende scrollen",
-	"about": "Generiere, überarbeite und debugge Code mit KI-Unterstützung.<br />Weitere Informationen findest du in unserer <DocsLink>Dokumentation</DocsLink>.",
+	"about": "Generiere, überarbeite und debugge Code mit KI-Unterstützung. Weitere Informationen findest du in unserer <DocsLink>Dokumentation</DocsLink>.",
 	"onboarding": "<strong>Deine Aufgabenliste in diesem Arbeitsbereich ist leer.</strong> Beginne mit der Eingabe einer Aufgabe unten. Du bist dir nicht sicher, wie du anfangen sollst? Lies mehr darüber, was Roo für dich tun kann, in <DocsLink>den Dokumenten</DocsLink>.",
 	"rooTips": {
 		"boomerangTasks": {
@@ -211,9 +211,9 @@
 		"title": "🎉 Roo Code {{version}} veröffentlicht",
 		"description": "Roo Code {{version}} bringt leistungsstarke neue Funktionen und Verbesserungen basierend auf deinem Feedback.",
 		"whatsNew": "Was ist neu",
-		"feature1": "<bold>Implizites Caching für Gemini</bold>: Gemini API-Aufrufe werden jetzt automatisch zwischengespeichert, wodurch API-Kosten reduziert werden",
-		"feature2": "<bold>Intelligentere Modusauswahl</bold>: Modusdefinitionen können jetzt Hinweise enthalten, wann jeder Modus verwendet werden sollte, was eine bessere Orchestrierung ermöglicht",
-		"feature3": "<bold>Intelligente Kontextkomprimierung</bold>: Fasst Gesprächsverlauf intelligent zusammen, wenn der Kontext voll wird, anstatt ihn abzuschneiden (aktiviere dies in Einstellungen -> Experimentell)",
+		"feature1": "<bold>Gemini 2.5 Flash Vorschaumodelle</bold>: Zugriff auf die neuesten Gemini Flash-Modelle für schnellere und effizientere Antworten",
+		"feature2": "<bold>Intelligente Kontextverdichtung</bold>: Neuer Button in der Aufgabenleiste ermöglicht dir die intelligente Verdichtung von Inhalten mit visueller Rückmeldung",
+		"feature3": "<bold>YAML-Unterstützung für Modusdefinitionen</bold>: Erstelle und passe Modi einfacher mit YAML-Unterstützung an",
 		"hideButton": "Ankündigung ausblenden",
 		"detailsDiscussLinks": "Erhalte mehr Details und diskutiere auf <discordLink>Discord</discordLink> und <redditLink>Reddit</redditLink> 🚀"
 	},
@@ -260,5 +260,10 @@
 			"description": "Roo hat das automatisch genehmigte Limit von {{count}} API-Anfrage(n) erreicht. Möchtest du den Zähler zurücksetzen und mit der Aufgabe fortfahren?",
 			"button": "Zurücksetzen und fortfahren"
 		}
+	},
+	"codebaseSearch": {
+		"wantsToSearch": "Roo möchte den Codebase nach <code>{{query}}</code> durchsuchen:",
+		"wantsToSearchWithPath": "Roo möchte den Codebase nach <code>{{query}}</code> in <code>{{path}}</code> durchsuchen:",
+		"didSearch": "{{count}} Ergebnis(se) für <code>{{query}}</code> gefunden:"
 	}
 }
