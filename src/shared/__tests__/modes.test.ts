@@ -273,7 +273,7 @@ describe("FileRestrictionError", () => {
 				slug: "debug",
 				name: "🔍 Debug",
 				roleDefinition:
-					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
+					"You are Debug, an expert software debugger specializing in systematic problem diagnosis and resolution.",
 				groups: ["read", "edit", "browser", "command", "mcp"],
 			})
 			// Check for a key phrase from the updated instructions
@@ -293,7 +293,7 @@ describe("FileRestrictionError", () => {
 				slug: "debug",
 				name: "🔍 Debug",
 				roleDefinition:
-					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
+					"You are Debug, an expert software debugger specializing in systematic problem diagnosis and resolution.",
 			})
 		})
 
