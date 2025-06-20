@@ -59,7 +59,7 @@ describe("newTaskTool", () => {
 			slug: "code",
 			name: "Code Mode",
 			roleDefinition: "Test role definition",
-			groups: ["command", "read", "edit"],
+			tools: ["execute_command", "read_file", "apply_diff", "write_to_file"],
 		}) // Default valid mode
 		mockCline.consecutiveMistakeCount = 0
 		mockCline.isPaused = false
