@@ -1,13 +1,5 @@
 # Roo Code Changelog
 
-## [3.21.1] - 2025-06-19
-
-- Fix tree-sitter issues that were preventing codebase indexing from working correctly
-- Improve error handling for codebase search embeddings
-- Resolve MCP server execution on Windows with node version managers
-- Default 'Enable MCP Server Creation' to false
-- Rate limit correctly when starting a subtask (thanks @olweraltuve!)
-
 ## [3.21.0] - 2025-06-17
 
 - Add Roo Marketplace to make it easy to discover and install great MCPs and modes!

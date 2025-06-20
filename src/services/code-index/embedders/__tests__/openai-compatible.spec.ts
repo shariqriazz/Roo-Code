@@ -6,23 +6,6 @@ import { MAX_ITEM_TOKENS, INITIAL_RETRY_DELAY_MS } from "../../constants"
 // Mock the OpenAI SDK
 vitest.mock("openai")
 
-// Mock i18n
-vitest.mock("../../../../i18n", () => ({
-	t: (key: string, params?: Record<string, any>) => {
-		const translations: Record<string, string> = {
-			"embeddings:authenticationFailed":
-				"Failed to create embeddings: Authentication failed. Please check your API key.",
-			"embeddings:failedWithStatus": `Failed to create embeddings after ${params?.attempts} attempts: HTTP ${params?.statusCode} - ${params?.errorMessage}`,
-			"embeddings:failedWithError": `Failed to create embeddings after ${params?.attempts} attempts: ${params?.errorMessage}`,
-			"embeddings:failedMaxAttempts": `Failed to create embeddings after ${params?.attempts} attempts`,
-			"embeddings:textExceedsTokenLimit": `Text at index ${params?.index} exceeds maximum token limit (${params?.itemTokens} > ${params?.maxTokens}). Skipping.`,
-			"embeddings:rateLimitRetry": `Rate limit hit, retrying in ${params?.delayMs}ms (attempt ${params?.attempt}/${params?.maxRetries})`,
-			"embeddings:unknownError": "Unknown error",
-		}
-		return translations[key] || key
-	},
-}))
-
 const MockedOpenAI = OpenAI as MockedClass<typeof OpenAI>
 
 describe("OpenAICompatibleEmbedder", () => {
@@ -395,7 +378,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(authError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings: Authentication failed. Please check your API key.",
+					"Failed to create embeddings: batch processing error",
 				)
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -410,7 +393,7 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(serverError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 500 - Internal server error",
+					"Failed to create embeddings: batch processing error",
 				)
 
 				expect(mockEmbeddingsCreate).toHaveBeenCalledTimes(1)
@@ -428,11 +411,11 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(apiError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: API connection failed",
+					"Failed to create embeddings: batch processing error",
 				)
 
 				expect(console.error).toHaveBeenCalledWith(
-					expect.stringContaining("OpenAI Compatible embedder error"),
+					expect.stringContaining("Failed to process batch"),
 					expect.any(Error),
 				)
 			})
@@ -444,13 +427,10 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockRejectedValue(batchError)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Batch processing failed",
+					"Failed to create embeddings: batch processing error",
 				)
 
-				expect(console.error).toHaveBeenCalledWith(
-					expect.stringContaining("OpenAI Compatible embedder error"),
-					batchError,
-				)
+				expect(console.error).toHaveBeenCalledWith("Failed to process batch:", batchError)
 			})
 
 			it("should handle empty text arrays", async () => {
@@ -475,63 +455,6 @@ describe("OpenAICompatibleEmbedder", () => {
 				mockEmbeddingsCreate.mockResolvedValue(malformedResponse)
 
 				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow()
-			})
-
-			it("should provide specific authentication error message", async () => {
-				const testTexts = ["Hello world"]
-				const authError = new Error("Invalid API key")
-				;(authError as any).status = 401
-
-				mockEmbeddingsCreate.mockRejectedValue(authError)
-
-				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings: Authentication failed. Please check your API key.",
-				)
-			})
-
-			it("should provide detailed error message for HTTP errors", async () => {
-				const testTexts = ["Hello world"]
-				const httpError = new Error("Bad request")
-				;(httpError as any).status = 400
-
-				mockEmbeddingsCreate.mockRejectedValue(httpError)
-
-				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: HTTP 400 - Bad request",
-				)
-			})
-
-			it("should handle errors without status codes", async () => {
-				const testTexts = ["Hello world"]
-				const networkError = new Error("Network timeout")
-
-				mockEmbeddingsCreate.mockRejectedValue(networkError)
-
-				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Network timeout",
-				)
-			})
-
-			it("should handle errors without message property", async () => {
-				const testTexts = ["Hello world"]
-				const weirdError = { toString: () => "Custom error object" }
-
-				mockEmbeddingsCreate.mockRejectedValue(weirdError)
-
-				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Custom error object",
-				)
-			})
-
-			it("should handle completely unknown error types", async () => {
-				const testTexts = ["Hello world"]
-				const unknownError = null
-
-				mockEmbeddingsCreate.mockRejectedValue(unknownError)
-
-				await expect(embedder.createEmbeddings(testTexts)).rejects.toThrow(
-					"Failed to create embeddings after 3 attempts: Unknown error",
-				)
 			})
 		})
 

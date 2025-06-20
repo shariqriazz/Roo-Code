@@ -140,16 +140,8 @@ export class Task extends EventEmitter<ClineEvents> {
 	// API
 	readonly apiConfiguration: ProviderSettings
 	api: ApiHandler
-	private static lastGlobalApiRequestTime?: number
+	private lastApiRequestTime?: number
 	private consecutiveAutoApprovedRequestsCount: number = 0
-
-	/**
-	 * Reset the global API request timestamp. This should only be used for testing.
-	 * @internal
-	 */
-	static resetGlobalApiRequestTime(): void {
-		Task.lastGlobalApiRequestTime = undefined
-	}
 
 	toolRepetitionDetector: ToolRepetitionDetector
 	rooIgnoreController?: RooIgnoreController
@@ -1439,22 +1431,19 @@ export class Task extends EventEmitter<ClineEvents> {
 			} finally {
 				this.isStreaming = false
 			}
-
-			if (inputTokens > 0 || outputTokens > 0 || cacheWriteTokens > 0 || cacheReadTokens > 0) {
+			if (
+				inputTokens > 0 ||
+				outputTokens > 0 ||
+				cacheWriteTokens > 0 ||
+				cacheReadTokens > 0 ||
+				typeof totalCost !== "undefined"
+			) {
 				TelemetryService.instance.captureLlmCompletion(this.taskId, {
 					inputTokens,
 					outputTokens,
 					cacheWriteTokens,
 					cacheReadTokens,
-					cost:
-						totalCost ??
-						calculateApiCostAnthropic(
-							this.api.getModel().info,
-							inputTokens,
-							outputTokens,
-							cacheWriteTokens,
-							cacheReadTokens,
-						),
+					cost: totalCost,
 				})
 			}
 
@@ -1668,11 +1657,10 @@ export class Task extends EventEmitter<ClineEvents> {
 
 		let rateLimitDelay = 0
 
-		// Use the shared timestamp so that subtasks respect the same rate-limit
-		// window as their parent tasks.
-		if (Task.lastGlobalApiRequestTime) {
+		// Only apply rate limiting if this isn't the first request
+		if (this.lastApiRequestTime) {
 			const now = Date.now()
-			const timeSinceLastRequest = now - Task.lastGlobalApiRequestTime
+			const timeSinceLastRequest = now - this.lastApiRequestTime
 			const rateLimit = apiConfiguration?.rateLimitSeconds || 0
 			rateLimitDelay = Math.ceil(Math.max(0, rateLimit * 1000 - timeSinceLastRequest) / 1000)
 		}
@@ -1687,9 +1675,8 @@ export class Task extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		// Update last request time before making the request so that subsequent
-		// requests — even from new subtasks — will honour the provider's rate-limit.
-		Task.lastGlobalApiRequestTime = Date.now()
+		// Update last request time before making the request
+		this.lastApiRequestTime = Date.now()
 
 		const systemPrompt = await this.getSystemPrompt()
 		const { contextTokens } = this.getTokenUsage()

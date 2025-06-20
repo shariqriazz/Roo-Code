@@ -164,7 +164,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalOutputLineLimit: 500,
 		terminalShellIntegrationTimeout: 4000,
 		mcpEnabled: true,
-		enableMcpServerCreation: false,
+		enableMcpServerCreation: true,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
 		currentApiConfigName: "default",

@@ -15,8 +15,7 @@ function calculateApiCostInternal(
 	return totalCost
 }
 
-// For Anthropic compliant usage, the input tokens count does NOT include the
-// cached tokens.
+// For Anthropic compliant usage, the input tokens count does NOT include the cached tokens
 export function calculateApiCostAnthropic(
 	modelInfo: ModelInfo,
 	inputTokens: number,
@@ -24,16 +23,18 @@ export function calculateApiCostAnthropic(
 	cacheCreationInputTokens?: number,
 	cacheReadInputTokens?: number,
 ): number {
+	const cacheCreationInputTokensNum = cacheCreationInputTokens || 0
+	const cacheReadInputTokensNum = cacheReadInputTokens || 0
 	return calculateApiCostInternal(
 		modelInfo,
 		inputTokens,
 		outputTokens,
-		cacheCreationInputTokens || 0,
-		cacheReadInputTokens || 0,
+		cacheCreationInputTokensNum,
+		cacheReadInputTokensNum,
 	)
 }
 
-// For OpenAI compliant usage, the input tokens count INCLUDES the cached tokens.
+// For OpenAI compliant usage, the input tokens count INCLUDES the cached tokens
 export function calculateApiCostOpenAI(
 	modelInfo: ModelInfo,
 	inputTokens: number,
@@ -44,7 +45,6 @@ export function calculateApiCostOpenAI(
 	const cacheCreationInputTokensNum = cacheCreationInputTokens || 0
 	const cacheReadInputTokensNum = cacheReadInputTokens || 0
 	const nonCachedInputTokens = Math.max(0, inputTokens - cacheCreationInputTokensNum - cacheReadInputTokensNum)
-
 	return calculateApiCostInternal(
 		modelInfo,
 		nonCachedInputTokens,
