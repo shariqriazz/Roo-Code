@@ -56,7 +56,12 @@ import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-sear
 
 // Mock the sections
 vi.mock("../sections/modes", () => ({
-	getModesSection: vi.fn().mockImplementation(async () => `====\n\nMODES\n\n- Test modes section`),
+	getModesSection: vi
+		.fn()
+		.mockImplementation(
+			async () =>
+				`====\n\nMODES\n\n- These are the currently available modes:\n  * "💻 Code" mode (code) - Complex software development, architecture implementation, technical problem-solving, code quality\n  * "🏗️ Architect" mode (architect) - System design, architectural planning, technology strategy, technical leadership, design decisions\n  * "❓ Ask" mode (ask) - Knowledge synthesis, research, information gathering, technical consultation, requirement clarification\n  * "🪲 Debug" mode (debug) - Problem diagnosis, root cause analysis, systematic troubleshooting, issue resolution\n  * "🪃 Orchestrator" mode (orchestrator) - Use this mode for complex, multi-step projects that require coordination across different specialties. Ideal when you need to break down large tasks into subtasks, manage workflows, or coordinate work that spans multiple domains or expertise areas.\nIf the user asks you to create or edit a new mode for this project, you should read the instructions by using the fetch_instructions tool, like this:\n<fetch_instructions>\n<task>create_mode</task>\n</fetch_instructions>\n`,
+		),
 }))
 
 // Mock the custom instructions

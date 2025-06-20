@@ -19,6 +19,7 @@ import {
 	getToolUseGuidelinesSection,
 	addCustomInstructions,
 	markdownFormattingSection,
+	getModesSection,
 } from "./sections"
 
 async function generatePrompt(
@@ -83,6 +84,8 @@ ${getToolDescriptionsForMode(
 	partialReadsEnabled,
 	settings,
 )}
+
+${await getModesSection(context)}
 
 ${mcpServersSection}`
 
