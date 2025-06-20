@@ -15,10 +15,7 @@ describe("getAttemptCompletionDescription - DISABLE_COMPLETION_COMMAND experimen
 			const description = getAttemptCompletionDescription(args)
 
 			// Check that command parameter is included
-			expect(description).toContain("- command: (optional)")
-			expect(description).toContain("A CLI command to execute to show a live demo")
-			expect(description).toContain("<command>Command to demonstrate result (optional)</command>")
-			expect(description).toContain("<command>open index.html</command>")
+			expect(description).toContain("<command>optional_demo_command</command>")
 		})
 
 		it("should include command parameter when experiments is undefined", () => {
@@ -30,20 +27,14 @@ describe("getAttemptCompletionDescription - DISABLE_COMPLETION_COMMAND experimen
 			const description = getAttemptCompletionDescription(args)
 
 			// Check that command parameter is included
-			expect(description).toContain("- command: (optional)")
-			expect(description).toContain("A CLI command to execute to show a live demo")
-			expect(description).toContain("<command>Command to demonstrate result (optional)</command>")
-			expect(description).toContain("<command>open index.html</command>")
+			expect(description).toContain("<command>optional_demo_command</command>")
 		})
 
 		it("should include command parameter when no args provided", () => {
 			const description = getAttemptCompletionDescription()
 
 			// Check that command parameter is included
-			expect(description).toContain("- command: (optional)")
-			expect(description).toContain("A CLI command to execute to show a live demo")
-			expect(description).toContain("<command>Command to demonstrate result (optional)</command>")
-			expect(description).toContain("<command>open index.html</command>")
+			expect(description).toContain("<command>optional_demo_command</command>")
 		})
 	})
 
@@ -66,8 +57,8 @@ describe("getAttemptCompletionDescription - DISABLE_COMPLETION_COMMAND experimen
 			expect(description).not.toContain("<command>open index.html</command>")
 
 			// But should still have the basic structure
-			expect(description).toContain("## attempt_completion")
-			expect(description).toContain("- result: (required)")
+			expect(description).toContain("### `attempt_completion` - Present final results")
+			expect(description).toContain("<result>comprehensive_solution_summary</result>")
 			expect(description).toContain("<attempt_completion>")
 			expect(description).toContain("</attempt_completion>")
 		})
@@ -84,9 +75,7 @@ describe("getAttemptCompletionDescription - DISABLE_COMPLETION_COMMAND experimen
 			const description = getAttemptCompletionDescription(args)
 
 			// Check example format
-			expect(description).toContain("Example: Requesting to attempt completion with a result")
-			expect(description).toContain("I've updated the CSS")
-			expect(description).not.toContain("Example: Requesting to attempt completion with a result and command")
+			expect(description).not.toContain("<command>optional_demo_command</command>")
 		})
 	})
 
@@ -112,18 +101,13 @@ describe("getAttemptCompletionDescription - DISABLE_COMPLETION_COMMAND experimen
 			const descriptionEnabled = getAttemptCompletionDescription(argsWithExperimentEnabled)
 
 			// Both should contain core functionality
-			const coreText = "After each tool use, the user will respond with the result of that tool use"
+			const coreText = "### `attempt_completion` - Present final results"
 			expect(descriptionDisabled).toContain(coreText)
 			expect(descriptionEnabled).toContain(coreText)
 
-			// Both should contain the important note
-			const importantNote = "IMPORTANT NOTE: This tool CANNOT be used until you've confirmed"
-			expect(descriptionDisabled).toContain(importantNote)
-			expect(descriptionEnabled).toContain(importantNote)
-
 			// Both should contain result parameter
-			expect(descriptionDisabled).toContain("- result: (required)")
-			expect(descriptionEnabled).toContain("- result: (required)")
+			expect(descriptionDisabled).toContain("<result>comprehensive_solution_summary</result>")
+			expect(descriptionEnabled).toContain("<result>comprehensive_solution_summary</result>")
 		})
 	})
 })
