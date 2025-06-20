@@ -184,10 +184,12 @@ export function getModeSelection(mode: string, promptComponent?: PromptComponent
 	const customMode = findModeBySlug(mode, customModes)
 	const builtInMode = findModeBySlug(mode, modes)
 
-	const modeToUse = customMode || promptComponent || builtInMode
+	// Use customMode if available, otherwise fall back to builtInMode
+	const baseMode = customMode || builtInMode
 
-	const roleDefinition = modeToUse?.roleDefinition || ""
-	const baseInstructions = modeToUse?.customInstructions || ""
+	// Apply promptComponent overrides on top of the base mode
+	const roleDefinition = promptComponent?.roleDefinition || baseMode?.roleDefinition || ""
+	const baseInstructions = promptComponent?.customInstructions || baseMode?.customInstructions || ""
 
 	return {
 		roleDefinition,
