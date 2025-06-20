@@ -1,8 +1,8 @@
 import type { ToolName, ModeConfig } from "@roo-code/types"
 
-import { TOOL_GROUPS, ALWAYS_AVAILABLE_TOOLS, DiffStrategy } from "../../../shared/tools"
+import { ALWAYS_AVAILABLE_TOOLS, DiffStrategy } from "../../../shared/tools"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { Mode, getModeConfig, isToolAllowedForMode, getGroupName } from "../../../shared/modes"
+import { Mode, getModeConfig, isToolAllowedForMode, getToolName } from "../../../shared/modes"
 
 import { ToolArgs } from "./types"
 import { getExecuteCommandDescription } from "./execute-command"
@@ -74,27 +74,24 @@ export function getToolDescriptionsForMode(
 
 	const tools = new Set<string>()
 
-	// Add tools from mode's groups
-	config.groups.forEach((groupEntry) => {
-		const groupName = getGroupName(groupEntry)
-		const toolGroup = TOOL_GROUPS[groupName]
-		if (toolGroup) {
-			toolGroup.tools.forEach((tool) => {
-				if (
-					isToolAllowedForMode(
-						tool as ToolName,
-						mode,
-						customModes ?? [],
-						undefined,
-						undefined,
-						experiments ?? {},
-					)
-				) {
-					tools.add(tool)
-				}
-			})
-		}
-	})
+	// Add tools from mode's tools array
+	if (config.tools) {
+		config.tools.forEach((toolEntry) => {
+			const toolName = getToolName(toolEntry)
+			if (
+				isToolAllowedForMode(
+					toolName as ToolName,
+					mode,
+					customModes ?? [],
+					undefined,
+					undefined,
+					experiments ?? {},
+				)
+			) {
+				tools.add(toolName)
+			}
+		})
+	}
 
 	// Add always available tools
 	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
@@ -116,7 +113,7 @@ export function getToolDescriptionsForMode(
 
 		return descriptionFn({
 			...args,
-			toolOptions: undefined, // No tool options in group-based approach
+			toolOptions: undefined, // No tool options in direct tool approach
 		})
 	})
 

@@ -3,7 +3,7 @@ import * as os from "os"
 
 import type { ModeConfig, PromptComponent, CustomModePrompts } from "@roo-code/types"
 
-import { Mode, modes, defaultModeSlug, getModeBySlug, getGroupName, getModeSelection } from "../../shared/modes"
+import { Mode, modes, defaultModeSlug, getModeBySlug, getModeSelection } from "../../shared/modes"
 import { DiffStrategy } from "../../shared/tools"
 import { formatLanguage } from "../../shared/language"
 
@@ -57,7 +57,10 @@ async function generatePrompt(
 
 	const [modesSection, mcpServersSection] = await Promise.all([
 		getModesSection(context),
-		modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "mcp")
+		modeConfig.tools?.some((toolEntry) => {
+			const toolName = typeof toolEntry === "string" ? toolEntry : toolEntry[0]
+			return ["use_mcp_tool", "access_mcp_resource"].includes(toolName) // Check if MCP tools are enabled
+		})
 			? getMcpServersSection(mcpHub, effectiveDiffStrategy, enableMcpServerCreation)
 			: Promise.resolve(""),
 	])

@@ -15,18 +15,18 @@ describe("CustomModeSchema", () => {
 				slug: "test",
 				name: "Test Mode",
 				roleDefinition: "Test role definition",
-				groups: ["read"] as const,
+				tools: ["read_file"] as const,
 			} satisfies ModeConfig
 
 			expect(() => validateCustomMode(validMode)).not.toThrow()
 		})
 
-		test("accepts mode with multiple groups", () => {
+		test("accepts mode with multiple tools", () => {
 			const validMode = {
 				slug: "test",
 				name: "Test Mode",
 				roleDefinition: "Test role definition",
-				groups: ["read", "edit", "browser"] as const,
+				tools: ["read_file", "write_to_file", "apply_diff"] as const,
 			} satisfies ModeConfig
 
 			expect(() => validateCustomMode(validMode)).not.toThrow()
@@ -38,7 +38,7 @@ describe("CustomModeSchema", () => {
 				name: "Test Mode",
 				roleDefinition: "Test role definition",
 				customInstructions: "Custom instructions",
-				groups: ["read"] as const,
+				tools: ["read_file"] as const,
 			} satisfies ModeConfig
 
 			expect(() => validateCustomMode(validMode)).not.toThrow()
@@ -51,7 +51,7 @@ describe("CustomModeSchema", () => {
 				{
 					name: "Test",
 					roleDefinition: "Role",
-				}, // Missing slug and groups
+				}, // Missing slug and tools
 			]
 
 			invalidModes.forEach((invalidMode) => {
@@ -64,7 +64,7 @@ describe("CustomModeSchema", () => {
 				slug: "not@a@valid@slug",
 				name: "Test Mode",
 				roleDefinition: "Test role definition",
-				groups: ["read"] as const,
+				tools: ["read_file"] as const,
 			} satisfies Omit<ModeConfig, "slug"> & { slug: string }
 
 			expect(() => validateCustomMode(invalidMode)).toThrow(ZodError)
@@ -76,29 +76,29 @@ describe("CustomModeSchema", () => {
 				slug: "123e4567-e89b-12d3-a456-426614174000",
 				name: "",
 				roleDefinition: "Test role definition",
-				groups: ["read"] as const,
+				tools: ["read_file"] as const,
 			} satisfies ModeConfig
 
 			const emptyRoleMode = {
 				slug: "123e4567-e89b-12d3-a456-426614174000",
 				name: "Test Mode",
 				roleDefinition: "",
-				groups: ["read"] as const,
+				tools: ["read_file"] as const,
 			} satisfies ModeConfig
 
 			expect(() => validateCustomMode(emptyNameMode)).toThrow("Name is required")
 			expect(() => validateCustomMode(emptyRoleMode)).toThrow("Role definition is required")
 		})
 
-		test("rejects invalid group configurations", () => {
-			const invalidGroupMode = {
+		test("rejects invalid tool configurations", () => {
+			const invalidToolMode = {
 				slug: "123e4567-e89b-12d3-a456-426614174000",
 				name: "Test Mode",
 				roleDefinition: "Test role definition",
-				groups: ["not-a-valid-group"] as any,
+				tools: ["not-a-valid-tool"] as any,
 			}
 
-			expect(() => validateCustomMode(invalidGroupMode)).toThrow(ZodError)
+			expect(() => validateCustomMode(invalidToolMode)).toThrow(ZodError)
 		})
 
 		test("handles null and undefined gracefully", () => {
@@ -121,17 +121,17 @@ describe("CustomModeSchema", () => {
 				slug: "markdown-editor",
 				name: "Markdown Editor",
 				roleDefinition: "Markdown editing mode",
-				groups: ["read", ["edit", { fileRegex: "\\.md$" }], "browser"],
+				tools: ["read_file", ["write_to_file", { fileRegex: "\\.md$" }], "browser_action"],
 			}
 
 			const modeWithDescription = {
 				slug: "docs-editor",
 				name: "Documentation Editor",
 				roleDefinition: "Documentation editing mode",
-				groups: [
-					"read",
-					["edit", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
-					"browser",
+				tools: [
+					"read_file",
+					["write_to_file", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
+					"browser_action",
 				],
 			}
 
@@ -148,7 +148,7 @@ describe("CustomModeSchema", () => {
 					slug: "test",
 					name: "Test",
 					roleDefinition: "Test",
-					groups: ["read", ["edit", { fileRegex: pattern }]],
+					tools: ["read_file", ["write_to_file", { fileRegex: pattern }]],
 				}
 				expect(() => modeConfigSchema.parse(mode)).not.toThrow()
 			})
@@ -158,21 +158,26 @@ describe("CustomModeSchema", () => {
 					slug: "test",
 					name: "Test",
 					roleDefinition: "Test",
-					groups: ["read", ["edit", { fileRegex: pattern }]],
+					tools: ["read_file", ["write_to_file", { fileRegex: pattern }]],
 				}
 				expect(() => modeConfigSchema.parse(mode)).toThrow()
 			})
 		})
 
-		it("prevents duplicate groups", () => {
+		it("prevents duplicate tools", () => {
 			const modeWithDuplicates = {
 				slug: "test",
 				name: "Test",
 				roleDefinition: "Test",
-				groups: ["read", "read", ["edit", { fileRegex: "\\.md$" }], ["edit", { fileRegex: "\\.txt$" }]],
+				tools: [
+					"read_file",
+					"read_file",
+					["write_to_file", { fileRegex: "\\.md$" }],
+					["write_to_file", { fileRegex: "\\.txt$" }],
+				],
 			}
 
-			expect(() => modeConfigSchema.parse(modeWithDuplicates)).toThrow(/Duplicate groups/)
+			expect(() => modeConfigSchema.parse(modeWithDuplicates)).toThrow(/Duplicate tools/)
 		})
 	})
 
@@ -182,70 +187,70 @@ describe("CustomModeSchema", () => {
 		roleDefinition: "Test role definition",
 	}
 
-	describe("group format validation", () => {
-		test("accepts single group", () => {
+	describe("tool format validation", () => {
+		test("accepts single tool", () => {
 			const mode = {
 				...validBaseMode,
-				groups: ["read"] as const,
+				tools: ["read_file"] as const,
 			} satisfies ModeConfig
 
 			expect(() => modeConfigSchema.parse(mode)).not.toThrow()
 		})
 
-		test("accepts multiple groups", () => {
+		test("accepts multiple tools", () => {
 			const mode = {
 				...validBaseMode,
-				groups: ["read", "edit", "browser"] as const,
+				tools: ["read_file", "write_to_file", "apply_diff"] as const,
 			} satisfies ModeConfig
 
 			expect(() => modeConfigSchema.parse(mode)).not.toThrow()
 		})
 
-		test("accepts all available groups", () => {
+		test("accepts all available tools", () => {
 			const mode = {
 				...validBaseMode,
-				groups: ["read", "edit", "browser", "command", "mcp"] as const,
+				tools: ["read_file", "write_to_file", "apply_diff", "execute_command", "use_mcp_tool"] as const,
 			} satisfies ModeConfig
 
 			expect(() => modeConfigSchema.parse(mode)).not.toThrow()
 		})
 
-		test("rejects non-array group format", () => {
+		test("rejects non-array tool format", () => {
 			const mode = {
 				...validBaseMode,
-				groups: "not-an-array" as any,
+				tools: "not-an-array" as any,
 			}
 
 			expect(() => modeConfigSchema.parse(mode)).toThrow()
 		})
 
-		test("rejects invalid group names", () => {
+		test("rejects invalid tool names", () => {
 			const mode = {
 				...validBaseMode,
-				groups: ["invalid_group"] as any,
+				tools: ["invalid_tool"] as any,
 			}
 
 			expect(() => modeConfigSchema.parse(mode)).toThrow()
 		})
 
-		test("rejects duplicate groups", () => {
+		test("rejects duplicate tools", () => {
 			const mode = {
 				...validBaseMode,
-				groups: ["read", "read"] as any,
+				tools: ["read_file", "read_file"] as any,
 			}
 
-			expect(() => modeConfigSchema.parse(mode)).toThrow("Duplicate groups are not allowed")
+			expect(() => modeConfigSchema.parse(mode)).toThrow("Duplicate tools are not allowed")
 		})
 
-		test("rejects null or undefined groups", () => {
+		test("rejects null or undefined tools", () => {
 			const modeWithNull = {
 				...validBaseMode,
-				groups: null as any,
+				tools: null as any,
 			}
 
 			const modeWithUndefined = {
 				...validBaseMode,
-				groups: undefined as any,
+				tools: undefined as any,
 			}
 
 			expect(() => modeConfigSchema.parse(modeWithNull)).toThrow()

@@ -1,5 +1,5 @@
 import { WebviewMessage } from "../../shared/WebviewMessage"
-import { defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { buildApiHandler } from "../../api"
 import { experiments as experimentsModule, EXPERIMENT_IDS } from "../../shared/experiments"
 
@@ -55,9 +55,13 @@ export const generateSystemPrompt = async (provider: ClineProvider, message: Web
 		console.error("Error checking if model supports computer use:", error)
 	}
 
-	// Check if the current mode includes the browser tool group
+	// Check if the current mode includes browser tools
 	const modeConfig = getModeBySlug(mode, customModes)
-	const modeSupportsBrowser = modeConfig?.groups.some((group) => getGroupName(group) === "browser") ?? false
+	const modeSupportsBrowser =
+		modeConfig?.tools.some((toolEntry) => {
+			const toolName = typeof toolEntry === "string" ? toolEntry : toolEntry[0]
+			return ["computer_use"].includes(toolName) // Browser functionality via computer_use tool
+		}) ?? false
 
 	// Only enable browser tools if the model supports it, the mode includes browser tools,
 	// and browser tools are enabled in settings

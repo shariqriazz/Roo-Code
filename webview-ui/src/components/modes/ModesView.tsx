@@ -9,7 +9,7 @@ import {
 import { Trans } from "react-i18next"
 import { ChevronsUpDown, X } from "lucide-react"
 
-import { ModeConfig, GroupEntry, PromptComponent, ToolGroup, modeConfigSchema } from "@roo-code/types"
+import { ModeConfig, ToolEntry, PromptComponent, ToolName, modeConfigSchema } from "@roo-code/types"
 
 import {
 	Mode,
@@ -19,7 +19,7 @@ import {
 	getAllModes,
 	findModeBySlug as findCustomModeBySlug,
 } from "@roo/modes"
-import { TOOL_GROUPS } from "@roo/tools"
+import { TOOL_DISPLAY_NAMES } from "@roo/tools"
 
 import { vscode } from "@src/utils/vscode"
 import { buildDocLink } from "@src/utils/docLinks"
@@ -45,8 +45,25 @@ import {
 	Input,
 } from "@src/components/ui"
 
-// Get all available groups that should show in prompts view
-const availableGroups = (Object.keys(TOOL_GROUPS) as ToolGroup[]).filter((group) => !TOOL_GROUPS[group].alwaysAvailable)
+// Get all available tools
+const availableTools: ToolName[] = [
+	"read_file",
+	"fetch_instructions",
+	"search_files",
+	"list_files",
+	"list_code_definition_names",
+	"codebase_search",
+	"apply_diff",
+	"write_to_file",
+	"insert_content",
+	"search_and_replace",
+	"browser_action",
+	"execute_command",
+	"use_mcp_tool",
+	"access_mcp_resource",
+	"switch_mode",
+	"new_task",
+]
 
 type ModeSource = "global" | "project"
 
@@ -54,9 +71,9 @@ type ModesViewProps = {
 	onDone: () => void
 }
 
-// Helper to get group name regardless of format
-function getGroupName(group: GroupEntry): ToolGroup {
-	return Array.isArray(group) ? group[0] : group
+// Helper to get tool name regardless of format
+function getToolName(tool: ToolEntry): ToolName {
+	return Array.isArray(tool) ? tool[0] : tool
 }
 
 const ModesView = ({ onDone }: ModesViewProps) => {
@@ -79,8 +96,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	// 3. Still sending the mode change to the backend for persistence
 	const [visualMode, setVisualMode] = useState(mode)
 
-	// Memoize modes to preserve array order
-	const modes = useMemo(() => getAllModes(customModes), [customModes])
+	// Memoize all modes (built-in + custom) to preserve array order
+	const allModes = useMemo(() => getAllModes(customModes), [customModes])
 
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [selectedPromptContent, setSelectedPromptContent] = useState("")
@@ -180,8 +197,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	// Helper function to get current mode's config
 	const getCurrentMode = useCallback((): ModeConfig | undefined => {
 		const findMode = (m: ModeConfig): boolean => m.slug === visualMode
-		return customModes?.find(findMode) || modes.find(findMode)
-	}, [visualMode, customModes, modes])
+		return customModes?.find(findMode) || allModes.find(findMode)
+	}, [visualMode, customModes, allModes])
 
 	// Helper function to safely access mode properties
 	const getModeProperty = <T extends keyof ModeConfig>(
@@ -197,21 +214,21 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 	const [newModeRoleDefinition, setNewModeRoleDefinition] = useState("")
 	const [newModeWhenToUse, setNewModeWhenToUse] = useState("")
 	const [newModeCustomInstructions, setNewModeCustomInstructions] = useState("")
-	const [newModeGroups, setNewModeGroups] = useState<GroupEntry[]>(availableGroups)
+	const [newModeTools, setNewModeTools] = useState<ToolEntry[]>(availableTools)
 	const [newModeSource, setNewModeSource] = useState<ModeSource>("global")
 
 	// Field-specific error states
 	const [nameError, setNameError] = useState<string>("")
 	const [slugError, setSlugError] = useState<string>("")
 	const [roleDefinitionError, setRoleDefinitionError] = useState<string>("")
-	const [groupsError, setGroupsError] = useState<string>("")
+	const [toolsError, setToolsError] = useState<string>("")
 
 	// Helper to reset form state
 	const resetFormState = useCallback(() => {
 		// Reset form fields
 		setNewModeName("")
 		setNewModeSlug("")
-		setNewModeGroups(availableGroups)
+		setNewModeTools(availableTools)
 		setNewModeRoleDefinition("")
 		setNewModeWhenToUse("")
 		setNewModeCustomInstructions("")
@@ -220,7 +237,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		setNameError("")
 		setSlugError("")
 		setRoleDefinitionError("")
-		setGroupsError("")
+		setToolsError("")
 	}, [])
 
 	// Reset form fields when dialog opens
@@ -253,7 +270,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		setNameError("")
 		setSlugError("")
 		setRoleDefinitionError("")
-		setGroupsError("")
+		setToolsError("")
 
 		const source = newModeSource
 		const newMode: ModeConfig = {
@@ -262,7 +279,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 			roleDefinition: newModeRoleDefinition.trim(),
 			whenToUse: newModeWhenToUse.trim() || undefined,
 			customInstructions: newModeCustomInstructions.trim() || undefined,
-			groups: newModeGroups,
+			tools: newModeTools,
 			source,
 		}
 
@@ -285,8 +302,8 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 					case "roleDefinition":
 						setRoleDefinitionError(message)
 						break
-					case "groups":
-						setGroupsError(message)
+					case "tools":
+						setToolsError(message)
 						break
 				}
 			})
@@ -304,16 +321,16 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		newModeRoleDefinition,
 		newModeWhenToUse, // Add whenToUse dependency
 		newModeCustomInstructions,
-		newModeGroups,
+		newModeTools,
 		newModeSource,
 		updateCustomMode,
 	])
 
 	const isNameOrSlugTaken = useCallback(
 		(name: string, slug: string) => {
-			return modes.some((m) => m.slug === slug || m.name === name)
+			return allModes.some((m) => m.slug === slug || m.name === name)
 		},
-		[modes],
+		[allModes],
 	)
 
 	const openCreateModeDialog = useCallback(() => {
@@ -332,30 +349,40 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 		setIsCreateModeDialogOpen(true)
 	}, [generateSlug, isNameOrSlugTaken])
 
-	// Handler for group checkbox changes
-	const handleGroupChange = useCallback(
-		(group: ToolGroup, isCustomMode: boolean, customMode: ModeConfig | undefined) =>
-			(e: Event | React.FormEvent<HTMLElement>) => {
-				if (!isCustomMode) return // Prevent changes to built-in modes
-				const target = (e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
-				const checked = target.checked
-				const oldGroups = customMode?.groups || []
-				let newGroups: GroupEntry[]
-				if (checked) {
-					newGroups = [...oldGroups, group]
-				} else {
-					newGroups = oldGroups.filter((g) => getGroupName(g) !== group)
-				}
-				if (customMode) {
-					const source = customMode.source || "global"
-					updateCustomMode(customMode.slug, {
-						...customMode,
-						groups: newGroups,
-						source,
-					})
-				}
-			},
-		[updateCustomMode],
+	// Handler for tool checkbox changes
+	const handleToolChange = useCallback(
+		(tool: ToolName, currentMode: ModeConfig | undefined) => (e: Event | React.FormEvent<HTMLElement>) => {
+			if (!currentMode) return
+			const target = (e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
+			const checked = target.checked
+			const oldTools = currentMode.tools || []
+			let newTools: ToolEntry[]
+			if (checked) {
+				newTools = [...oldTools, tool]
+			} else {
+				newTools = oldTools.filter((t) => getToolName(t) !== tool)
+			}
+
+			// Check if this is a custom mode or if we need to create a custom override
+			const isCustomMode = findModeBySlug(currentMode.slug, customModes)
+			if (isCustomMode) {
+				// Update existing custom mode
+				const source = currentMode.source || "global"
+				updateCustomMode(currentMode.slug, {
+					...currentMode,
+					tools: newTools,
+					source,
+				})
+			} else {
+				// Create a custom mode override for built-in mode
+				updateCustomMode(currentMode.slug, {
+					...currentMode,
+					tools: newTools,
+					source: "global", // Default to global for built-in mode overrides
+				})
+			}
+		},
+		[updateCustomMode, customModes, findModeBySlug],
 	)
 
 	// Handle clicks outside the config menu
@@ -528,7 +555,7 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 											)}
 										</CommandEmpty>
 										<CommandGroup>
-											{modes
+											{allModes
 												.filter((modeConfig) =>
 													searchValue
 														? modeConfig.name
@@ -766,58 +793,42 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 						<div className="mb-4">
 							<div className="flex justify-between items-center mb-1">
 								<div className="font-bold">{t("prompts:tools.title")}</div>
-								{findModeBySlug(visualMode, customModes) && (
-									<Button
-										variant="ghost"
-										size="icon"
-										onClick={() => setIsToolsEditMode(!isToolsEditMode)}
-										title={
-											isToolsEditMode
-												? t("prompts:tools.doneEditing")
-												: t("prompts:tools.editTools")
-										}>
-										<span
-											className={`codicon codicon-${isToolsEditMode ? "check" : "edit"}`}></span>
-									</Button>
-								)}
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={() => setIsToolsEditMode(!isToolsEditMode)}
+									title={
+										isToolsEditMode ? t("prompts:tools.doneEditing") : t("prompts:tools.editTools")
+									}>
+									<span className={`codicon codicon-${isToolsEditMode ? "check" : "edit"}`}></span>
+								</Button>
 							</div>
-							{!findModeBySlug(visualMode, customModes) && (
-								<div className="text-sm text-vscode-descriptionForeground mb-2">
-									{t("prompts:tools.builtInModesText")}
-								</div>
-							)}
-							{isToolsEditMode && findModeBySlug(visualMode, customModes) ? (
+							{isToolsEditMode ? (
 								<div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
-									{availableGroups.map((group) => {
+									{availableTools.map((tool) => {
 										const currentMode = getCurrentMode()
-										const isCustomMode = findModeBySlug(visualMode, customModes)
-										const customMode = isCustomMode
-										const isGroupEnabled = isCustomMode
-											? customMode?.groups?.some((g) => getGroupName(g) === group)
-											: currentMode?.groups?.some((g) => getGroupName(g) === group)
+										const isToolEnabled = currentMode?.tools?.some((t) => getToolName(t) === tool)
 
 										return (
 											<VSCodeCheckbox
-												key={group}
-												checked={isGroupEnabled}
-												onChange={handleGroupChange(group, Boolean(isCustomMode), customMode)}
-												disabled={!isCustomMode}>
-												{t(`prompts:tools.toolNames.${group}`)}
-												{group === "edit" && (
+												key={tool}
+												checked={isToolEnabled}
+												onChange={handleToolChange(tool, currentMode)}>
+												{TOOL_DISPLAY_NAMES[tool]}
+												{tool === "apply_diff" && (
 													<div className="text-xs text-vscode-descriptionForeground mt-0.5">
 														{t("prompts:tools.allowedFiles")}{" "}
 														{(() => {
 															const currentMode = getCurrentMode()
-															const editGroup = currentMode?.groups?.find(
-																(g) =>
-																	Array.isArray(g) &&
-																	g[0] === "edit" &&
-																	g[1]?.fileRegex,
+															const editTool = currentMode?.tools?.find(
+																(t) =>
+																	Array.isArray(t) &&
+																	t[0] === "apply_diff" &&
+																	t[1]?.fileRegex,
 															)
-															if (!Array.isArray(editGroup)) return t("prompts:allFiles")
+															if (!Array.isArray(editTool)) return t("prompts:allFiles")
 															return (
-																editGroup[1].description ||
-																`/${editGroup[1].fileRegex}/`
+																editTool[1].description || `/${editTool[1].fileRegex}/`
 															)
 														})()}
 													</div>
@@ -830,20 +841,19 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 								<div className="text-sm text-vscode-foreground mb-2 leading-relaxed">
 									{(() => {
 										const currentMode = getCurrentMode()
-										const enabledGroups = currentMode?.groups || []
+										const enabledTools = currentMode?.tools || []
 
-										// If there are no enabled groups, display translated "None"
-										if (enabledGroups.length === 0) {
+										// If there are no enabled tools, display translated "None"
+										if (enabledTools.length === 0) {
 											return t("prompts:tools.noTools")
 										}
 
-										return enabledGroups
-											.map((group) => {
-												const groupName = getGroupName(group)
-												const displayName = t(`prompts:tools.toolNames.${groupName}`)
-												if (Array.isArray(group) && group[1]?.fileRegex) {
-													const description =
-														group[1].description || `/${group[1].fileRegex}/`
+										return enabledTools
+											.map((tool) => {
+												const toolName = getToolName(tool)
+												const displayName = TOOL_DISPLAY_NAMES[toolName]
+												if (Array.isArray(tool) && tool[1]?.fileRegex) {
+													const description = tool[1].description || `/${tool[1].fileRegex}/`
 													return `${displayName} (${description})`
 												}
 												return displayName
@@ -1210,28 +1220,26 @@ const ModesView = ({ onDone }: ModesViewProps) => {
 									{t("prompts:createModeDialog.tools.description")}
 								</div>
 								<div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
-									{availableGroups.map((group) => (
+									{availableTools.map((tool) => (
 										<VSCodeCheckbox
-											key={group}
-											checked={newModeGroups.some((g) => getGroupName(g) === group)}
+											key={tool}
+											checked={newModeTools.some((t) => getToolName(t) === tool)}
 											onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 												const target =
 													(e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
 												const checked = target.checked
 												if (checked) {
-													setNewModeGroups([...newModeGroups, group])
+													setNewModeTools([...newModeTools, tool])
 												} else {
-													setNewModeGroups(
-														newModeGroups.filter((g) => getGroupName(g) !== group),
-													)
+													setNewModeTools(newModeTools.filter((t) => getToolName(t) !== tool))
 												}
 											}}>
-											{t(`prompts:tools.toolNames.${group}`)}
+											{TOOL_DISPLAY_NAMES[tool]}
 										</VSCodeCheckbox>
 									))}
 								</div>
-								{groupsError && (
-									<div className="text-xs text-vscode-errorForeground mt-1">{groupsError}</div>
+								{toolsError && (
+									<div className="text-xs text-vscode-errorForeground mt-1">{toolsError}</div>
 								)}
 							</div>
 							<div className="mb-4">

@@ -6,25 +6,36 @@ customModes:
       - Understanding the mode system architecture and configuration
       - Creating well-structured mode definitions with clear roles and responsibilities
       - Writing comprehensive XML-based special instructions using best practices
-      - Ensuring modes have appropriate tool group permissions
+      - Ensuring modes have appropriate tool permissions
       - Crafting clear whenToUse descriptions for the Orchestrator
       - Following XML structuring best practices for clarity and parseability
       
       You help users create new modes by:
       - Gathering requirements about the mode's purpose and workflow
       - Defining appropriate roleDefinition and whenToUse descriptions
-      - Selecting the right tool groups and file restrictions
+      - Selecting the right tools and file restrictions
       - Creating detailed XML instruction files in the .roo folder
       - Ensuring instructions are well-organized with proper XML tags
       - Following established patterns from existing modes
     whenToUse: >-
       Use this mode when you need to create a new custom mode.
-    groups:
-      - read
-      - - edit
-        - fileRegex: (\.roomodes$|\.roo/.*\.xml$|\.yaml$)
-          description: Mode configuration files and XML instructions
-      - command
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+    fileRestrictions:
+      - fileRegex: (\.roomodes$|\.roo/.*\.xml$|\.yaml$)
+        description: Mode configuration files and XML instructions
   - slug: test
     name: 🧪 Test
     roleDefinition: >-
@@ -51,13 +62,24 @@ customModes:
       - Using appropriate mocking strategies
     whenToUse: >-
       Use this mode when you need to write, modify, or maintain tests for the codebase.
-    groups:
-      - read
-      - browser
-      - command
-      - - edit
-        - fileRegex: (__tests__/.*|__mocks__/.*|\.test\.(ts|tsx|js|jsx)$|\.spec\.(ts|tsx|js|jsx)$|/test/.*|vitest\.config\.(js|ts)$|vitest\.setup\.(js|ts)$)
-          description: Test files, mocks, and Vitest configuration
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - browser_action
+    fileRestrictions:
+      - fileRegex: (__tests__/.*|__mocks__/.*|\.test\.(ts|tsx|js|jsx)$|\.spec\.(ts|tsx|js|jsx)$|/test/.*|vitest\.config\.(js|ts)$|vitest\.setup\.(js|ts)$)
+        description: Test files, mocks, and Vitest configuration
     customInstructions: |-
       When writing tests:
       - Always use describe/it blocks for clear test organization
@@ -78,14 +100,25 @@ customModes:
       - Ensuring interfaces are responsive and adapt to different screen sizes.
       - Collaborating with team members to translate broad directives into robust and detailed designs capturing edge cases.
       - Maintaining uniformity and consistency across the user interface.
-    groups:
-      - read
-      - - edit
-        - fileRegex: \.(css|html|json|mdx?|jsx?|tsx?|svg)$
-          description: Frontend & SVG files
-      - browser
-      - command
-      - mcp
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - browser_action
+      - fetch_instructions
+    fileRestrictions:
+      - fileRegex: \.(css|html|json|mdx?|jsx?|tsx?|svg)$
+        description: Frontend & SVG files
     customInstructions: Focus on UI refinement, component creation, and adherence to design best-practices. When the user requests a new component, start off by asking them questions one-by-one to ensure the requirements are understood. Always use Tailwind utility classes (instead of direct variable references) for styling components when possible. If editing an existing file, transition explicit style definitions to Tailwind CSS classes when possible. Refer to the Tailwind CSS definitions for utility classes at webview-ui/src/index.css. Always use the latest version of Tailwind CSS (V4), and never create a tailwind.config.js file. Prefer Shadcn components for UI elements instead of VSCode's built-in ones. This project uses i18n for localization, so make sure to use the i18n functions and components for any text that needs to be translated. Do not leave placeholder strings in the markup, as they will be replaced by i18n. Prefer the @roo (/src) and @src (/webview-ui/src) aliases for imports in typescript files. Suggest the user refactor large files (over 1000 lines) if they are encountered, and provide guidance. Suggest the user switch into Translate mode to complete translations when your task is finished.
     source: project
   - slug: release-engineer
@@ -120,21 +153,42 @@ customModes:
          - Create a version bump PR when changesets are merged to main
          - Update the CHANGELOG.md with proper formatting
          - Publish the release when the version bump PR is merged
-    groups:
-      - read
-      - edit
-      - command
-      - browser
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - browser_action
     source: project
   - slug: translate
     name: 🌐 Translate
     roleDefinition: You are Roo, a linguistic specialist focused on translating and managing localization files. Your responsibility is to help maintain and update translation files for the application, ensuring consistency and accuracy across all language resources.
-    groups:
-      - read
-      - command
-      - - edit
-        - fileRegex: (.*\.(md|ts|tsx|js|jsx)$|.*\.json$)
-          description: Source code, translation files, and documentation
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+    fileRestrictions:
+      - fileRegex: (.*\.(md|ts|tsx|js|jsx)$|.*\.json$)
+        description: Source code, translation files, and documentation
     source: project
   - slug: issue-fixer
     name: 🔧 Issue Fixer
@@ -151,11 +205,21 @@ customModes:
 
       You work with issues from the RooCodeInc/Roo-Code repository, transforming them into working code that addresses all requirements while maintaining code quality and consistency. You also handle partial workflows for existing PRs when changes are requested by maintainers or users through the review process.
     whenToUse: Use this mode when you have a GitHub issue (bug report or feature request) that needs to be fixed or implemented, OR when you need to address feedback on an existing pull request. Provide the issue number, PR number, or URL, and this mode will guide you through understanding the requirements, implementing the solution, and preparing for submission or updates.
-    groups:
-      - read
-      - edit
-      - command
-      - mcp
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - fetch_instructions
     source: project
   - slug: issue-writer
     name: 📝 Issue Writer
@@ -171,10 +235,17 @@ customModes:
       - Bug Reports: Documenting reproducible bugs with clear steps and expected outcomes
       - Feature Proposals: Creating detailed, actionable feature requests with clear problem statements, solutions, and acceptance criteria
     whenToUse: Use this mode when you need to create a GitHub issue for bug reports or feature requests. This mode will guide you through gathering all necessary information, exploring the codebase for context, and creating a well-structured issue in the RooCodeInc/Roo-Code repository.
-    groups:
-      - read
-      - command
-      - mcp
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - fetch_instructions
     source: project
   - slug: integration-tester
     name: 🧪 Integration Tester
@@ -199,12 +270,23 @@ customModes:
       - Using async/await with proper timeout handling
       - Validating both success and failure scenarios
       - Properly typed with TypeScript
-    groups:
-      - read
-      - command
-      - - edit
-        - fileRegex: (apps/vscode-e2e/.*\.(ts|js)$|packages/types/.*\.ts$)
-          description: E2E test files, test utilities, and API type definitions
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+    fileRestrictions:
+      - fileRegex: (apps/vscode-e2e/.*\.(ts|js)$|packages/types/.*\.ts$)
+        description: E2E test files, test utilities, and API type definitions
     source: project
   - slug: pr-reviewer
     name: 🔍 PR Reviewer
@@ -220,13 +302,24 @@ customModes:
       
       You work primarily with the RooCodeInc/Roo-Code repository, using GitHub MCP tools to fetch and review pull requests. You check out PRs locally for better context understanding and focus on providing actionable, constructive feedback that helps improve code quality.
     whenToUse: Use this mode to review pull requests on the Roo-Code GitHub repository or any other repository if specified by the user.
-    groups:
-      - read
-      - - edit
-        - fileRegex: \.md$
-          description: Markdown files only
-      - mcp
-      - command
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - fetch_instructions
+    fileRestrictions:
+      - fileRegex: \.md$
+        description: Markdown files only
     source: project
   - slug: docs-extractor
     name: 📚 Docs Extractor
@@ -234,11 +327,22 @@ customModes:
       You are Roo, a comprehensive documentation extraction specialist focused on analyzing and documenting all technical and non-technical information about features and components within codebases.
     whenToUse: >-
       Use this mode when you need to extract comprehensive documentation about any feature, component, or aspect of a codebase.
-    groups:
-      - read
-      - - edit
-        - fileRegex: (DOCS-TEMP-.*\.md$|\.roo/docs-extractor/.*\.md$)
-          description: Temporary documentation extraction files only
-      - command
-      - mcp
+    tools:
+      - read_file
+      - list_files
+      - list_code_definition_names
+      - search_files
+      - apply_diff
+      - write_to_file
+      - insert_content
+      - search_and_replace
+      - execute_command
+      - ask_followup_question
+      - attempt_completion
+      - switch_mode
+      - new_task
+      - fetch_instructions
+    fileRestrictions:
+      - fileRegex: (DOCS-TEMP-.*\.md$|\.roo/docs-extractor/.*\.md$)
+        description: Temporary documentation extraction files only
 

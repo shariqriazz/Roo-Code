@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
-import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "@roo-code/types"
+import type { ClineAsk, ToolProgressStatus, ToolName } from "@roo-code/types"
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 
@@ -163,18 +163,12 @@ export interface SearchAndReplaceToolUse extends ToolUse {
 		Partial<Pick<Record<ToolParamName, string>, "use_regex" | "ignore_case" | "start_line" | "end_line">>
 }
 
-// Define tool group configuration
-export type ToolGroupConfig = {
-	tools: readonly string[]
-	alwaysAvailable?: boolean // Whether this group is always available and shouldn't show in prompts view
-}
-
 export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	execute_command: "run commands",
 	read_file: "read files",
 	fetch_instructions: "fetch instructions",
 	write_to_file: "write files",
-	apply_diff: "apply changes",
+	apply_diff: "apply diff",
 	search_files: "search files",
 	list_files: "list files",
 	list_code_definition_names: "list definitions",
@@ -190,43 +184,8 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	codebase_search: "codebase search",
 } as const
 
-// Define available tool groups.
-export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
-	read: {
-		tools: [
-			"read_file",
-			"fetch_instructions",
-			"search_files",
-			"list_files",
-			"list_code_definition_names",
-			"codebase_search",
-		],
-	},
-	edit: {
-		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
-	},
-	browser: {
-		tools: ["browser_action"],
-	},
-	command: {
-		tools: ["execute_command"],
-	},
-	mcp: {
-		tools: ["use_mcp_tool", "access_mcp_resource"],
-	},
-	modes: {
-		tools: ["switch_mode", "new_task"],
-		alwaysAvailable: true,
-	},
-}
-
 // Tools that are always available to all modes.
-export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
-	"ask_followup_question",
-	"attempt_completion",
-	"switch_mode",
-	"new_task",
-] as const
+export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = ["ask_followup_question", "attempt_completion"] as const
 
 export type DiffResult =
 	| { success: true; content: string; failParts?: DiffResult[] }

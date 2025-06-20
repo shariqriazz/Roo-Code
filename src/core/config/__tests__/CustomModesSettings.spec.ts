@@ -9,7 +9,7 @@ describe("CustomModesSettings", () => {
 		slug: "123e4567-e89b-12d3-a456-426614174000",
 		name: "Test Mode",
 		roleDefinition: "Test role definition",
-		groups: ["read"] as const,
+		tools: ["read_file"] as const,
 	} satisfies ModeConfig
 
 	describe("schema validation", () => {
@@ -110,12 +110,12 @@ describe("CustomModesSettings", () => {
 			}).toThrow("Duplicate mode slugs are not allowed")
 		})
 
-		it("rejects invalid group configurations in modes", () => {
+		it("rejects invalid tool configurations in modes", () => {
 			const invalidSettings = {
 				customModes: [
 					{
 						...validMode,
-						groups: ["invalid_group"] as any,
+						tools: ["invalid_tool"] as any,
 					},
 				],
 			}
@@ -125,12 +125,12 @@ describe("CustomModesSettings", () => {
 			}).toThrow(ZodError)
 		})
 
-		it("handles multiple groups", () => {
+		it("handles multiple tools", () => {
 			const validSettings = {
 				customModes: [
 					{
 						...validMode,
-						groups: ["read", "edit", "browser"] as const,
+						tools: ["read_file", "write_to_file", "apply_diff"] as const,
 					},
 				],
 			}
@@ -151,7 +151,7 @@ describe("CustomModesSettings", () => {
 			expect(settings.customModes[0].slug).toBeDefined()
 			expect(settings.customModes[0].name).toBeDefined()
 			expect(settings.customModes[0].roleDefinition).toBeDefined()
-			expect(settings.customModes[0].groups).toBeDefined()
+			expect(settings.customModes[0].tools).toBeDefined()
 		})
 
 		it("inferred type allows optional fields", () => {

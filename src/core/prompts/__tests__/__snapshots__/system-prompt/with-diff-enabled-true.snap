@@ -185,6 +185,22 @@ API_KEY = "new_key"
 </execute_command>
 ```
 
+### `switch_mode` - Switch to specialized modes
+```xml
+<switch_mode>
+<mode_slug>target_mode</mode_slug>
+<reason>justification_for_switch</reason>
+</switch_mode>
+```
+
+### `new_task` - Create new specialized task instances
+```xml
+<new_task>
+<mode>target_mode</mode>
+<message>task_instructions</message>
+</new_task>
+```
+
 ### `ask_followup_question` - Ask user for clarification
 ```xml
 <ask_followup_question>
@@ -203,22 +219,6 @@ API_KEY = "new_key"
 <result>comprehensive_solution_summary</result>
 <command>optional_demo_command</command>
 </attempt_completion>
-```
-
-### `switch_mode` - Switch to specialized modes
-```xml
-<switch_mode>
-<mode_slug>target_mode</mode_slug>
-<reason>justification_for_switch</reason>
-</switch_mode>
-```
-
-### `new_task` - Create new specialized task instances
-```xml
-<new_task>
-<mode>target_mode</mode>
-<message>task_instructions</message>
-</new_task>
 ```
 
 # Tool Use Guidelines

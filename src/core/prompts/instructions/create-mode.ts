@@ -23,7 +23,7 @@ If asked to create a project mode, create it in .roomodes in the workspace root.
   * slug: A valid slug (lowercase letters, numbers, and hyphens). Must be unique, and shorter is better.
   * name: The display name for the mode
   * roleDefinition: A detailed description of the mode's role and capabilities
-  * groups: Array of allowed tool groups (can be empty). Each group can be specified either as a string (e.g., "edit" to allow editing any file) or with file restrictions (e.g., ["edit", { fileRegex: "\\.md$", description: "Markdown files only" }] to only allow editing markdown files)
+  * tools: Array of allowed tools (can be empty). Each tool can be specified either as a string (e.g., "apply_diff" to allow editing any file) or with file restrictions (e.g., ["apply_diff", { fileRegex: "\\.md$", description: "Markdown files only" }] to only allow editing markdown files)
 
 - The following fields are optional but highly recommended:
   * whenToUse: A clear description of when this mode should be selected and what types of tasks it's best suited for. This helps the Orchestrator mode make better decisions.
@@ -43,18 +43,27 @@ customModes:
       - Working with CSS, HTML, and modern frontend frameworks
       - Ensuring consistent user experiences across platforms  # Required: non-empty
     whenToUse: >-
-      Use this mode when creating or modifying UI components, implementing design systems, 
-      or ensuring responsive web interfaces. This mode is especially effective with CSS, 
+      Use this mode when creating or modifying UI components, implementing design systems,
+      or ensuring responsive web interfaces. This mode is especially effective with CSS,
       HTML, and modern frontend frameworks.  # Optional but recommended
-    groups:  # Required: array of tool groups (can be empty)
-      - read     # Read files group (read_file, fetch_instructions, search_files, list_files, list_code_definition_names)
-      - edit     # Edit files group (apply_diff, write_to_file) - allows editing any file
+    tools:  # Required: array of tools (can be empty)
+      - read_file                    # Read files
+      - fetch_instructions           # Fetch instructions
+      - search_files                 # Search files
+      - list_files                   # List files
+      - list_code_definition_names   # List definitions
+      - codebase_search              # Codebase search
+      - apply_diff                   # Apply changes - allows editing any file
+      - write_to_file                # Write files - allows editing any file
+      - insert_content               # Insert content - allows editing any file
+      - search_and_replace           # Search and replace - allows editing any file
       # Or with file restrictions:
-      # - - edit
+      # - - apply_diff
       #   - fileRegex: \\.md$
-      #     description: Markdown files only  # Edit group that only allows editing markdown files
-      - browser  # Browser group (browser_action)
-      - command  # Command group (execute_command)
-      - mcp      # MCP group (use_mcp_tool, access_mcp_resource)
+      #     description: Markdown files only  # Tool that only allows editing markdown files
+      - browser_action               # Use browser
+      - execute_command              # Run commands
+      - use_mcp_tool                 # Use MCP tools
+      - access_mcp_resource          # Access MCP resources
     customInstructions: Additional instructions for the Designer mode  # Optional`
 }

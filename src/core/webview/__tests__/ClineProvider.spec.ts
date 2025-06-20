@@ -234,41 +234,26 @@ vi.mock("../../../shared/modes", () => ({
 			slug: "code",
 			name: "Code Mode",
 			roleDefinition: "You are a code assistant",
-			groups: ["read", "edit", "browser"],
+			tools: ["read_file", "apply_diff", "write_to_file", "computer_use"],
 		},
 		{
 			slug: "architect",
 			name: "Architect Mode",
 			roleDefinition: "You are an architect",
-			groups: ["read", "edit"],
+			tools: ["read_file", ["apply_diff", { fileRegex: "\\.md$" }], ["write_to_file", { fileRegex: "\\.md$" }]],
 		},
 		{
 			slug: "ask",
 			name: "Ask Mode",
 			roleDefinition: "You are a helpful assistant",
-			groups: ["read"],
+			tools: ["read_file"],
 		},
 	],
 	getModeBySlug: vi.fn().mockReturnValue({
 		slug: "code",
 		name: "Code Mode",
 		roleDefinition: "You are a code assistant",
-		groups: ["read", "edit", "browser"],
-	}),
-	getGroupName: vi.fn().mockImplementation((group: string) => {
-		// Return appropriate group names for different tool groups
-		switch (group) {
-			case "read":
-				return "Read Tools"
-			case "edit":
-				return "Edit Tools"
-			case "browser":
-				return "Browser Tools"
-			case "mcp":
-				return "MCP Tools"
-			default:
-				return "General Tools"
-		}
+		tools: ["read_file", "apply_diff", "write_to_file", "computer_use"],
 	}),
 	defaultModeSlug: "code",
 }))

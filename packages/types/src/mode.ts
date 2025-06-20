@@ -1,12 +1,12 @@
 import { z } from "zod"
 
-import { toolGroupsSchema } from "./tool.js"
+import { toolNamesSchema } from "./tool.js"
 
 /**
- * GroupOptions
+ * ToolOptions
  */
 
-export const groupOptionsSchema = z.object({
+export const toolOptionsSchema = z.object({
 	fileRegex: z
 		.string()
 		.optional()
@@ -28,37 +28,37 @@ export const groupOptionsSchema = z.object({
 	description: z.string().optional(),
 })
 
-export type GroupOptions = z.infer<typeof groupOptionsSchema>
+export type ToolOptions = z.infer<typeof toolOptionsSchema>
 
 /**
- * GroupEntry
+ * ToolEntry
  */
 
-export const groupEntrySchema = z.union([toolGroupsSchema, z.tuple([toolGroupsSchema, groupOptionsSchema])])
+export const toolEntrySchema = z.union([toolNamesSchema, z.tuple([toolNamesSchema, toolOptionsSchema])])
 
-export type GroupEntry = z.infer<typeof groupEntrySchema>
+export type ToolEntry = z.infer<typeof toolEntrySchema>
 
 /**
  * ModeConfig
  */
 
-const groupEntryArraySchema = z.array(groupEntrySchema).refine(
-	(groups) => {
+const toolEntryArraySchema = z.array(toolEntrySchema).refine(
+	(tools) => {
 		const seen = new Set()
 
-		return groups.every((group) => {
-			// For tuples, check the group name (first element).
-			const groupName = Array.isArray(group) ? group[0] : group
+		return tools.every((tool) => {
+			// For tuples, check the tool name (first element).
+			const toolName = Array.isArray(tool) ? tool[0] : tool
 
-			if (seen.has(groupName)) {
+			if (seen.has(toolName)) {
 				return false
 			}
 
-			seen.add(groupName)
+			seen.add(toolName)
 			return true
 		})
 	},
-	{ message: "Duplicate groups are not allowed" },
+	{ message: "Duplicate tools are not allowed" },
 )
 
 export const modeConfigSchema = z.object({
@@ -67,7 +67,7 @@ export const modeConfigSchema = z.object({
 	roleDefinition: z.string().min(1, "Role definition is required"),
 	whenToUse: z.string().optional(),
 	customInstructions: z.string().optional(),
-	groups: groupEntryArraySchema,
+	tools: toolEntryArraySchema,
 	source: z.enum(["global", "project"]).optional(),
 })
 

@@ -2,8 +2,7 @@
 
 import type { ModeConfig } from "@roo-code/types"
 
-import { isToolAllowedForMode, modes } from "../../../shared/modes"
-import { TOOL_GROUPS } from "../../../shared/tools"
+import { isToolAllowedForMode, modes, getToolsForMode, getModeBySlug } from "../../../shared/modes"
 
 import { validateToolUse } from "../validateToolUse"
 
@@ -13,12 +12,14 @@ describe("mode-validator", () => {
 	describe("isToolAllowedForMode", () => {
 		describe("code mode", () => {
 			it("allows all code mode tools", () => {
-				// Code mode has all groups
-				Object.entries(TOOL_GROUPS).forEach(([_, config]) => {
-					config.tools.forEach((tool: string) => {
+				// Code mode has all tools
+				const codeModeConfig = getModeBySlug(codeMode, [])
+				if (codeModeConfig) {
+					const codeTools = getToolsForMode(codeModeConfig.tools)
+					codeTools.forEach((tool: string) => {
 						expect(isToolAllowedForMode(tool, codeMode, [])).toBe(true)
 					})
-				})
+				}
 			})
 
 			it("disallows unknown tools", () => {
@@ -28,25 +29,27 @@ describe("mode-validator", () => {
 
 		describe("architect mode", () => {
 			it("allows configured tools", () => {
-				// Architect mode has read, browser, and mcp groups
-				const architectTools = [
-					...TOOL_GROUPS.read.tools,
-					...TOOL_GROUPS.browser.tools,
-					...TOOL_GROUPS.mcp.tools,
-				]
-				architectTools.forEach((tool) => {
-					expect(isToolAllowedForMode(tool, architectMode, [])).toBe(true)
-				})
+				// Architect mode has specific tools configured
+				const architectModeConfig = getModeBySlug(architectMode, [])
+				if (architectModeConfig) {
+					const architectTools = getToolsForMode(architectModeConfig.tools)
+					architectTools.forEach((tool) => {
+						expect(isToolAllowedForMode(tool, architectMode, [])).toBe(true)
+					})
+				}
 			})
 		})
 
 		describe("ask mode", () => {
 			it("allows configured tools", () => {
-				// Ask mode has read, browser, and mcp groups
-				const askTools = [...TOOL_GROUPS.read.tools, ...TOOL_GROUPS.browser.tools, ...TOOL_GROUPS.mcp.tools]
-				askTools.forEach((tool) => {
-					expect(isToolAllowedForMode(tool, askMode, [])).toBe(true)
-				})
+				// Ask mode has specific tools configured
+				const askModeConfig = getModeBySlug(askMode, [])
+				if (askModeConfig) {
+					const askTools = getToolsForMode(askModeConfig.tools)
+					askTools.forEach((tool) => {
+						expect(isToolAllowedForMode(tool, askMode, [])).toBe(true)
+					})
+				}
 			})
 		})
 
@@ -57,13 +60,13 @@ describe("mode-validator", () => {
 						slug: "custom-mode",
 						name: "Custom Mode",
 						roleDefinition: "Custom role",
-						groups: ["read", "edit"] as const,
+						tools: ["read_file", "write_to_file"],
 					},
 				]
-				// Should allow tools from read and edit groups
+				// Should allow configured tools
 				expect(isToolAllowedForMode("read_file", "custom-mode", customModes)).toBe(true)
 				expect(isToolAllowedForMode("write_to_file", "custom-mode", customModes)).toBe(true)
-				// Should not allow tools from other groups
+				// Should not allow tools not in the list
 				expect(isToolAllowedForMode("execute_command", "custom-mode", customModes)).toBe(false)
 			})
 
@@ -73,12 +76,12 @@ describe("mode-validator", () => {
 						slug: codeMode,
 						name: "Custom Code Mode",
 						roleDefinition: "Custom role",
-						groups: ["read"] as const,
+						tools: ["read_file"],
 					},
 				]
-				// Should allow tools from read group
+				// Should allow tools from custom configuration
 				expect(isToolAllowedForMode("read_file", codeMode, customModes)).toBe(true)
-				// Should not allow tools from other groups
+				// Should not allow tools not in custom configuration
 				expect(isToolAllowedForMode("write_to_file", codeMode, customModes)).toBe(false)
 			})
 
@@ -88,15 +91,15 @@ describe("mode-validator", () => {
 						slug: "custom-mode",
 						name: "Custom Mode",
 						roleDefinition: "Custom role",
-						groups: ["edit"] as const,
+						tools: ["apply_diff", "write_to_file"],
 					},
 				]
 				const requirements = { apply_diff: false }
 
-				// Should respect disabled requirement even if tool group is allowed
+				// Should respect disabled requirement even if tool is configured
 				expect(isToolAllowedForMode("apply_diff", "custom-mode", customModes, requirements)).toBe(false)
 
-				// Should allow other edit tools
+				// Should allow other configured tools
 				expect(isToolAllowedForMode("write_to_file", "custom-mode", customModes, requirements)).toBe(true)
 			})
 		})

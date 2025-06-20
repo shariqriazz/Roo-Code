@@ -18,19 +18,55 @@ describe("isToolAllowedForMode", () => {
 			slug: "markdown-editor",
 			name: "Markdown Editor",
 			roleDefinition: "You are a markdown editor",
-			groups: ["read", ["edit", { fileRegex: "\\.md$" }], "browser"],
+			tools: [
+				"read_file",
+				"fetch_instructions",
+				"search_files",
+				"list_files",
+				"list_code_definition_names",
+				"codebase_search",
+				["apply_diff", { fileRegex: "\\.md$" }],
+				["write_to_file", { fileRegex: "\\.md$" }],
+				["insert_content", { fileRegex: "\\.md$" }],
+				["search_and_replace", { fileRegex: "\\.md$" }],
+				"browser_action",
+			],
 		},
 		{
 			slug: "css-editor",
 			name: "CSS Editor",
 			roleDefinition: "You are a CSS editor",
-			groups: ["read", ["edit", { fileRegex: "\\.css$" }], "browser"],
+			tools: [
+				"read_file",
+				"fetch_instructions",
+				"search_files",
+				"list_files",
+				"list_code_definition_names",
+				"codebase_search",
+				["apply_diff", { fileRegex: "\\.css$" }],
+				["write_to_file", { fileRegex: "\\.css$" }],
+				["insert_content", { fileRegex: "\\.css$" }],
+				["search_and_replace", { fileRegex: "\\.css$" }],
+				"browser_action",
+			],
 		},
 		{
 			slug: "test-exp-mode",
 			name: "Test Exp Mode",
 			roleDefinition: "You are an experimental tester",
-			groups: ["read", "edit", "browser"],
+			tools: [
+				"read_file",
+				"fetch_instructions",
+				"search_files",
+				"list_files",
+				"list_code_definition_names",
+				"codebase_search",
+				"apply_diff",
+				"write_to_file",
+				"insert_content",
+				"search_and_replace",
+				"browser_action",
+			],
 		},
 	]
 
@@ -150,10 +186,18 @@ describe("isToolAllowedForMode", () => {
 					slug: "docs-editor",
 					name: "Documentation Editor",
 					roleDefinition: "You are a documentation editor",
-					groups: [
-						"read",
-						["edit", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
-						"browser",
+					tools: [
+						"read_file",
+						"fetch_instructions",
+						"search_files",
+						"list_files",
+						"list_code_definition_names",
+						"codebase_search",
+						["apply_diff", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
+						["write_to_file", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
+						["insert_content", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
+						["search_and_replace", { fileRegex: "\\.(md|txt)$", description: "Documentation files only" }],
+						"browser_action",
 					],
 				},
 			]
@@ -278,7 +322,22 @@ describe("FileRestrictionError", () => {
 				name: "🪲 Debug",
 				roleDefinition:
 					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
-				groups: ["read", "edit", "browser", "command", "mcp"],
+				tools: expect.arrayContaining([
+					"read_file",
+					"fetch_instructions",
+					"search_files",
+					"list_files",
+					"list_code_definition_names",
+					"codebase_search",
+					"apply_diff",
+					"write_to_file",
+					"insert_content",
+					"search_and_replace",
+					"browser_action",
+					"execute_command",
+					"use_mcp_tool",
+					"access_mcp_resource",
+				]),
 			})
 			expect(debugMode?.customInstructions).toContain(
 				"Reflect on 5-7 different possible sources of the problem, distill those down to 1-2 most likely sources, and then add logs to validate your assumptions. Explicitly ask the user to confirm the diagnosis before fixing the problem.",
@@ -308,7 +367,7 @@ describe("FileRestrictionError", () => {
 					slug: "debug",
 					name: "Custom Debug",
 					roleDefinition: "Custom debug role",
-					groups: ["read"],
+					tools: ["read_file"],
 				},
 			]
 
@@ -317,7 +376,7 @@ describe("FileRestrictionError", () => {
 				slug: "debug",
 				name: "Custom Debug",
 				roleDefinition: "Custom debug role",
-				groups: ["read"],
+				tools: ["read_file"],
 			})
 		})
 
@@ -378,14 +437,14 @@ describe("getModeSelection", () => {
 			name: "Custom Code Mode",
 			roleDefinition: "Custom Code Role",
 			customInstructions: "Custom Code Instructions",
-			groups: ["read"],
+			tools: ["read_file"],
 		},
 		{
 			slug: "new-custom",
 			name: "New Custom Mode",
 			roleDefinition: "New Custom Role",
 			customInstructions: "New Custom Instructions",
-			groups: ["edit"],
+			tools: ["apply_diff"],
 		},
 	]
 
@@ -460,7 +519,7 @@ describe("getModeSelection", () => {
 				slug: "no-instr",
 				name: "No Instructions Mode",
 				roleDefinition: "Role for no instructions",
-				groups: ["read"],
+				tools: ["read_file"],
 				// customInstructions is undefined
 			},
 		]
@@ -476,7 +535,7 @@ describe("getModeSelection", () => {
 				name: "Empty Role Mode",
 				roleDefinition: "",
 				customInstructions: "Instructions for empty role",
-				groups: ["read"],
+				tools: ["read_file"],
 			},
 		]
 		const selection = getModeSelection("empty-role", undefined, modesWithEmptyRoleDef)
@@ -489,7 +548,7 @@ describe("getModeSelection", () => {
 				name: "Undefined Role Mode",
 				roleDefinition: "", // Test undefined explicitly by using an empty string
 				customInstructions: "Instructions for undefined role",
-				groups: ["read"],
+				tools: ["read_file"],
 			},
 		]
 		const selection2 = getModeSelection("undefined-role", undefined, modesWithUndefinedRoleDef)
@@ -504,7 +563,7 @@ describe("getModeSelection", () => {
 				slug: "role-custom",
 				name: "Role Custom",
 				roleDefinition: "Custom Role Only",
-				groups: ["read"] /* customInstructions undefined */,
+				tools: ["read_file"] /* customInstructions undefined */,
 			},
 		]
 		const promptComponentInstrOnly: PromptComponent = { customInstructions: "Prompt Instructions Only" }
@@ -523,7 +582,7 @@ describe("getModeSelection", () => {
 				name: "Instr Custom",
 				roleDefinition: "", // Explicitly empty
 				customInstructions: "Custom Instructions Only",
-				groups: ["read"],
+				tools: ["read_file"],
 			},
 		]
 		const promptComponentRoleOnly: PromptComponent = { roleDefinition: "Prompt Role Only" }
@@ -536,7 +595,7 @@ describe("getModeSelection", () => {
 
 	test("promptComponent with empty/undefined fields takes precedence over customMode and builtInMode", () => {
 		const customModeMinimal: ModeConfig[] = [
-			{ slug: "ask", name: "Custom Ask Minimal", roleDefinition: "Custom Min Role", groups: ["read"] }, // roleDef empty, customInstr undefined
+			{ slug: "ask", name: "Custom Ask Minimal", roleDefinition: "Custom Min Role", tools: ["read_file"] }, // roleDef empty, customInstr undefined
 		]
 		const promptComponentMinimal: PromptComponent = {
 			roleDefinition: "Prompt Min Role",

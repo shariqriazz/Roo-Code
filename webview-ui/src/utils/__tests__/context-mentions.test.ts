@@ -423,13 +423,13 @@ describe("getContextMenuOptions", () => {
 				slug: "code",
 				name: "Code",
 				roleDefinition: "You are a coding assistant",
-				groups: ["read" as const, "edit" as const],
+				tools: ["read_file" as const, "apply_diff" as const],
 			},
 			{
 				slug: "architect",
 				name: "Architect",
 				roleDefinition: "You are an architecture assistant",
-				groups: ["read" as const],
+				tools: ["read_file" as const],
 			},
 		]
 
