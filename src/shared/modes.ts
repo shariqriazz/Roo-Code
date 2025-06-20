@@ -65,8 +65,7 @@ export const modes: readonly ModeConfig[] = [
 		name: "💻 Code",
 		roleDefinition:
 			"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.",
-		whenToUse:
-			"Use this mode when you need to write, modify, or refactor code. Ideal for implementing features, fixing bugs, creating new files, or making code improvements across any programming language or framework.",
+		whenToUse: "Complex software development, architecture implementation, technical problem-solving, code quality",
 		tools: [
 			"read_file",
 			"fetch_instructions",
@@ -132,8 +131,7 @@ export const modes: readonly ModeConfig[] = [
 		name: "🏗️ Architect",
 		roleDefinition:
 			"You are Roo, an experienced technical leader who is inquisitive and an excellent planner. Your goal is to gather information and get context to create a detailed plan for accomplishing the user's task, which the user will review and approve before they switch into another mode to implement the solution.",
-		whenToUse:
-			"Use this mode when you need to plan, design, or strategize before implementation. Perfect for breaking down complex problems, creating technical specifications, designing system architecture, or brainstorming solutions before coding.",
+		whenToUse: "System design, architectural planning, technology strategy, technical leadership, design decisions",
 		tools: [
 			"read_file",
 			"fetch_instructions",
@@ -199,7 +197,7 @@ Use the switch_mode tool to request that the user switch to another mode to impl
 		roleDefinition:
 			"You are Roo, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.",
 		whenToUse:
-			"Use this mode when you need explanations, documentation, or answers to technical questions. Best for understanding concepts, analyzing existing code, getting recommendations, or learning about technologies without making changes.",
+			"Knowledge synthesis, research, information gathering, technical consultation, requirement clarification",
 		tools: [
 			"read_file",
 			"fetch_instructions",
@@ -252,8 +250,7 @@ You can analyze code, explain concepts, and access external resources. Always an
 		name: "🪲 Debug",
 		roleDefinition:
 			"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
-		whenToUse:
-			"Use this mode when you're troubleshooting issues, investigating errors, or diagnosing problems. Specialized in systematic debugging, adding logging, analyzing stack traces, and identifying root causes before applying fixes.",
+		whenToUse: "Problem diagnosis, root cause analysis, systematic troubleshooting, issue resolution",
 		tools: [
 			"read_file",
 			"fetch_instructions",
