@@ -14,13 +14,9 @@ import { PromptVariables, loadSystemPromptFile } from "./sections/custom-system-
 
 import { getToolDescriptionsForMode } from "./tools"
 import {
-	getRulesSection,
 	getSystemInfoSection,
-	getObjectiveSection,
 	getMcpServersSection,
 	getToolUseGuidelinesSection,
-	getCapabilitiesSection,
-	getModesSection,
 	addCustomInstructions,
 	markdownFormattingSection,
 } from "./sections"
@@ -55,21 +51,24 @@ async function generatePrompt(
 	const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
 	const { roleDefinition, baseInstructions } = getModeSelection(mode, promptComponent, customModeConfigs)
 
-	const [modesSection, mcpServersSection] = await Promise.all([
-		getModesSection(context),
-		modeConfig.tools?.some((toolEntry) => {
-			const toolName = typeof toolEntry === "string" ? toolEntry : toolEntry[0]
-			return ["use_mcp_tool", "access_mcp_resource"].includes(toolName) // Check if MCP tools are enabled
-		})
-			? getMcpServersSection(mcpHub, effectiveDiffStrategy, enableMcpServerCreation)
-			: Promise.resolve(""),
-	])
+	const mcpServersSection = modeConfig.tools?.some((toolEntry) => {
+		const toolName = typeof toolEntry === "string" ? toolEntry : toolEntry[0]
+		return ["use_mcp_tool", "access_mcp_resource"].includes(toolName) // Check if MCP tools are enabled
+	})
+		? await getMcpServersSection(mcpHub, effectiveDiffStrategy, enableMcpServerCreation)
+		: ""
 
 	const codeIndexManager = CodeIndexManager.getInstance(context)
 
 	const basePrompt = `${roleDefinition}
 
 ${markdownFormattingSection()}
+
+${getSystemInfoSection(cwd)}
+
+${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}
+
+${getToolUseGuidelinesSection(codeIndexManager)}
 
 ${getToolDescriptionsForMode(
 	mode,
@@ -85,21 +84,7 @@ ${getToolDescriptionsForMode(
 	settings,
 )}
 
-${getToolUseGuidelinesSection(codeIndexManager)}
-
-${mcpServersSection}
-
-${getCapabilitiesSection(cwd, supportsComputerUse, mcpHub, effectiveDiffStrategy, codeIndexManager)}
-
-${modesSection}
-
-${getRulesSection(cwd, supportsComputerUse, effectiveDiffStrategy, codeIndexManager)}
-
-${getSystemInfoSection(cwd)}
-
-${getObjectiveSection(codeIndexManager, experiments)}
-
-${await addCustomInstructions(baseInstructions, globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
+${mcpServersSection}`
 
 	return basePrompt
 }
