@@ -93,149 +93,113 @@ export class MultiFileSearchReplaceDiffStrategy implements DiffStrategy {
 	getToolDescription(args: { cwd: string; toolOptions?: { [key: string]: string } }): string {
 		return `## apply_diff
 
-Description: Request to apply targeted modifications to one or more files by searching for specific sections of content and replacing them. This tool supports both single-file and multi-file operations, allowing you to make changes across multiple files in a single request.
+**Purpose:** Modify existing files by searching and replacing specific content blocks.
 
-You can perform multiple distinct search and replace operations within a single \`apply_diff\` call by providing multiple SEARCH/REPLACE blocks in the \`diff\` parameter. This is the preferred way to make several targeted changes efficiently.
+**CRITICAL REQUIREMENTS:**
+1. \`:start_line:N\` MUST appear immediately after \`<<<<<<< SEARCH\` (NOT in REPLACE section)
+2. SEARCH content MUST match target EXACTLY (every space, tab, newline)
+3. Can include multiple SEARCH/REPLACE blocks in one operation
 
-The SEARCH section must exactly match existing content including whitespace and indentation.
-If you're not confident in the exact content to search for, use the read_file tool first to get the exact content.
-When applying the diffs, be extra careful to remember to change any closing brackets or other syntax that may be affected by the diff farther down in the file.
-ALWAYS make as many changes in a single 'apply_diff' request as possible using multiple SEARCH/REPLACE blocks
-
-Parameters:
+**Parameters:**
 - args: Contains one or more file elements, where each file contains:
   - path: (required) The path of the file to modify (relative to the current workspace directory ${args.cwd})
   - diff: (required) One or more diff elements containing:
     - content: (required) The search/replace block defining the changes.
     - start_line: (required) The line number of original content where the search block starts.
 
-Diff format:
-\`\`\`
+**Format:**
+\`\`\`xml
+<apply_diff>
+<args>
+<file>
+  <path>relative/path/to/file.ext</path>
+  <diff>
+    <content>
 <<<<<<< SEARCH
-:start_line: (required) The line number of original content where the search block starts.
+:start_line:[LINE_NUMBER]
 -------
-[exact content to find including whitespace]
+[EXACT_CONTENT_TO_FIND]
 =======
-[new content to replace with]
+[NEW_CONTENT_TO_REPLACE_WITH]
 >>>>>>> REPLACE
-\`\`\`
-
-Example:
-
-Original file:
-\`\`\`
-1 | def calculate_total(items):
-2 |     total = 0
-3 |     for item in items:
-4 |         total += item
-5 |     return total
-\`\`\`
-
-Search/Replace content:
-<apply_diff>
-<args>
-<file>
-  <path>eg.file.py</path>
-  <diff>
-    <content>
-\`\`\`
-<<<<<<< SEARCH
-def calculate_total(items):
-    total = 0
-    for item in items:
-        total += item
-    return total
-=======
-def calculate_total(items):
-    """Calculate total with 10% markup"""
-    return sum(item * 1.1 for item in items)
->>>>>>> REPLACE
-\`\`\`
     </content>
   </diff>
 </file>
 </args>
 </apply_diff>
+\`\`\`
 
-Search/Replace content with multi edits in one file:
+**Example - Single file edit:**
+\`\`\`xml
 <apply_diff>
 <args>
 <file>
-  <path>eg.file.py</path>
+  <path>src/utils.js</path>
   <diff>
     <content>
-\`\`\`
 <<<<<<< SEARCH
-def calculate_total(items):
-    sum = 0
+:start_line:10
+-------
+function calculate(x) {
+    return x * 2;
+}
 =======
-def calculate_sum(items):
-    sum = 0
+function calculate(x, y) {
+    return x * y;
+}
 >>>>>>> REPLACE
-\`\`\`
-    </content>
-  </diff>
-  <diff>
-    <content>
-\`\`\`
-<<<<<<< SEARCH
-        total += item
-    return total
-=======
-        sum += item
-    return sum 
->>>>>>> REPLACE
-\`\`\`
-    </content>
-  </diff>
-</file>
-<file>
-  <path>eg.file2.py</path>
-  <diff>
-    <content>
-\`\`\`
-<<<<<<< SEARCH
-def greet(name):
-    return "Hello " + name
-=======
-def greet(name):
-    return f"Hello {name}!"
->>>>>>> REPLACE
-\`\`\`
     </content>
   </diff>
 </file>
 </args>
 </apply_diff>
+\`\`\`
 
-
-Usage:
+**Example - Multiple files:**
+\`\`\`xml
 <apply_diff>
 <args>
 <file>
-  <path>File path here</path>
+  <path>src/config.py</path>
   <diff>
     <content>
-Your search/replace content here
-You can use multi search/replace block in one diff block, but make sure to include the line numbers for each block.
-Only use a single line of '=======' between search and replacement content, because multiple '=======' will corrupt the file.
+<<<<<<< SEARCH
+:start_line:5
+-------
+DEBUG = False
+=======
+DEBUG = True
+>>>>>>> REPLACE
     </content>
-    <start_line>1</start_line>
   </diff>
 </file>
 <file>
-  <path>Another file path</path>
+  <path>src/utils.py</path>
   <diff>
     <content>
-Another search/replace content here
-You can apply changes to multiple files in a single request.
-Each file requires its own path, start_line, and diff elements.
+<<<<<<< SEARCH
+:start_line:15
+-------
+API_KEY = "old_key"
+=======
+API_KEY = "new_key"
+>>>>>>> REPLACE
     </content>
-    <start_line>5</start_line>
   </diff>
 </file>
 </args>
-</apply_diff>`
+</apply_diff>
+\`\`\`
+
+**COMMON FAILURES TO AVOID:**
+- Missing \`:start_line:\` → Tool will fail
+- Inexact whitespace match → Search won't find content
+- Wrong line number → May match wrong occurrence
+- Not updating related code → Can break functionality
+
+**BEST PRACTICE:** Use \`read_file\` first to see exact content with line numbers
+
+**Note**: The SEARCH block must be an exact, character-for-character match of the content in the file, including all whitespace. Do NOT include line numbers or other metadata from`
 	}
 
 	private unescapeMarkers(content: string): string {
