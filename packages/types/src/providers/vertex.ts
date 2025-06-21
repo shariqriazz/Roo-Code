@@ -273,6 +273,15 @@ export const vertexModels = {
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
 	},
+	"deepseek-r1-0528-maas": {
+		maxTokens: 8192,
+		contextWindow: 163840,
+		inputPrice: 0,
+		outputPrice: 0,
+		supportsPromptCache: false,
+		supportsImages: false,
+		supportsReasoningEffort: true,
+	},
 } as const satisfies Record<string, ModelInfo>
 
 export const VERTEX_REGIONS = [
