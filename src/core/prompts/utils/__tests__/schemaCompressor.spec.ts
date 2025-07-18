@@ -1,7 +1,7 @@
 // npx vitest core/prompts/utils/__tests__/schemaCompressor.spec.ts
 
 import { describe, it, expect } from "vitest"
-import { jsonSchemaToXml, compressSchemaWithMetrics, compressToolSchemas } from "../schemaCompressor"
+import { jsonSchemaToXml } from "../schemaCompressor"
 
 describe("schemaCompressor", () => {
 	describe("jsonSchemaToXml", () => {
@@ -314,133 +314,6 @@ describe("schemaCompressor", () => {
 			}
 
 			expect(jsonSchemaToXml(schema)).toBe("<schema>roles?:array[enum(admin|user|guest)]</schema>")
-		})
-	})
-
-	describe("compressSchemaWithMetrics", () => {
-		it("should calculate compression metrics", () => {
-			const schema = {
-				type: "object",
-				properties: {
-					query: {
-						type: "string",
-						description: "The natural language question to answer using web search.",
-					},
-				},
-				required: ["query"],
-			}
-
-			const result = compressSchemaWithMetrics(schema)
-
-			expect(result.compressed).toBe("<schema>query*:string</schema>")
-			expect(result.originalTokens).toBeGreaterThan(result.compressedTokens)
-			expect(result.reduction).toBeGreaterThan(50) // Should be significant reduction
-		})
-
-		it("should handle null/undefined schemas", () => {
-			const resultNull = compressSchemaWithMetrics(null)
-			const resultUndefined = compressSchemaWithMetrics(undefined)
-
-			expect(resultNull.compressed).toBe("<schema></schema>")
-			expect(resultUndefined.compressed).toBe("<schema></schema>")
-			expect(resultNull.reduction).toBe(0)
-			expect(resultUndefined.reduction).toBe(0)
-		})
-
-		it("should provide accurate token estimation for various text lengths", () => {
-			const shortSchema = { type: "string" }
-			const mediumSchema = {
-				type: "object",
-				properties: {
-					field1: { type: "string" },
-					field2: { type: "number" },
-				},
-			}
-			const longSchema = {
-				type: "object",
-				properties: {
-					field1: { type: "string", description: "A very long description that adds many tokens" },
-					field2: { type: "array", items: { type: "object", properties: { nested: { type: "boolean" } } } },
-					field3: { type: "string", enum: ["option1", "option2", "option3", "option4"] },
-				},
-			}
-
-			const shortResult = compressSchemaWithMetrics(shortSchema)
-			const mediumResult = compressSchemaWithMetrics(mediumSchema)
-			const longResult = compressSchemaWithMetrics(longSchema)
-
-			// Token counts should increase with complexity
-			expect(shortResult.originalTokens).toBeLessThan(mediumResult.originalTokens)
-			expect(mediumResult.originalTokens).toBeLessThan(longResult.originalTokens)
-
-			// All should show reduction
-			expect(shortResult.reduction).toBeGreaterThan(0)
-			expect(mediumResult.reduction).toBeGreaterThan(0)
-			expect(longResult.reduction).toBeGreaterThan(0)
-		})
-	})
-
-	describe("compressToolSchemas", () => {
-		it("should compress multiple tools and calculate total metrics", () => {
-			const tools = [
-				{
-					name: "search",
-					inputSchema: {
-						type: "object" as const,
-						properties: {
-							query: { type: "string" as const },
-						},
-						required: ["query"],
-					},
-				},
-				{
-					name: "translate",
-					inputSchema: {
-						type: "object" as const,
-						properties: {
-							text: { type: "string" as const },
-							target_lang: { type: "string" as const },
-							source_lang: { type: "string" as const },
-						},
-						required: ["text", "target_lang"],
-					},
-				},
-			]
-
-			const result = compressToolSchemas(tools as Array<{ name: string; inputSchema?: any }>)
-
-			expect(result.compressedTools).toHaveLength(2)
-			expect(result.compressedTools[0].compressedSchema).toBe("<schema>query*:string</schema>")
-			expect(result.compressedTools[1].compressedSchema).toBe(
-				"<schema>text*:string, target_lang*:string, source_lang?:string</schema>",
-			)
-			expect(result.totalReduction).toBeGreaterThan(0)
-			expect(result.originalTokens).toBeGreaterThan(result.compressedTokens)
-		})
-
-		it("should handle tools without schemas", () => {
-			const tools = [
-				{ name: "tool1", inputSchema: undefined },
-				{ name: "tool2" },
-				{ name: "tool3", inputSchema: null },
-			]
-
-			const result = compressToolSchemas(tools as Array<{ name: string; inputSchema?: any }>)
-
-			expect(result.compressedTools).toHaveLength(3)
-			result.compressedTools.forEach((tool) => {
-				expect(tool.compressedSchema).toBe("<schema></schema>")
-			})
-			expect(result.totalReduction).toBe(0)
-		})
-
-		it("should handle empty tools array", () => {
-			const result = compressToolSchemas([])
-
-			expect(result.compressedTools).toHaveLength(0)
-			expect(result.totalReduction).toBe(0)
-			expect(result.originalTokens).toBe(0)
-			expect(result.compressedTokens).toBe(0)
 		})
 	})
 

@@ -1,6 +1,5 @@
 // Constants for better maintainability
 const ENUM_DISPLAY_THRESHOLD = 3
-const TOKENS_PER_CHARACTER = 4
 
 // JSON Schema type definitions
 interface JsonSchemaProperty {
@@ -19,13 +18,6 @@ interface JsonSchema {
 	properties?: Record<string, JsonSchemaProperty>
 	required?: string[]
 	items?: JsonSchemaProperty
-}
-
-export interface SchemaCompressionResult {
-	compressed: string
-	originalTokens: number
-	compressedTokens: number
-	reduction: number
 }
 
 /**
@@ -146,102 +138,5 @@ function getCompactType(prop: JsonSchemaProperty | null | undefined): string {
 			return "null"
 		default:
 			return prop.type || "any"
-	}
-}
-
-/**
- * Estimates the number of tokens in a text string
- * Uses a more sophisticated algorithm based on common tokenization patterns
- * @param text - The text to estimate tokens for
- * @returns The estimated number of tokens
- */
-function estimateTokens(text: string): number {
-	// Handle null/undefined/empty strings
-	if (!text) {
-		return 0
-	}
-
-	// More accurate token estimation based on:
-	// - Average English word length is ~4.7 characters
-	// - Punctuation and whitespace add overhead
-	// - JSON structure adds additional tokens
-
-	// Count words (rough approximation)
-	const words = text.split(/\s+/).filter((w) => w.length > 0).length
-
-	// Count special JSON characters that typically become separate tokens
-	const jsonTokens = (text.match(/[{}[\],:]/g) || []).length
-
-	// Estimate based on character count for very short strings
-	if (text.length < 20) {
-		return Math.ceil(text.length / 3)
-	}
-
-	// Combined estimation
-	return Math.ceil(words * 1.3 + jsonTokens * 0.5)
-}
-
-/**
- * Compresses a JSON Schema and provides metrics about the compression
- * @param schema - The JSON Schema to compress
- * @returns Compression result with metrics
- */
-export function compressSchemaWithMetrics(schema: JsonSchema | null | undefined): SchemaCompressionResult {
-	const originalJson = JSON.stringify(schema, null, 2)
-	const compressed = jsonSchemaToXml(schema)
-
-	const originalTokens = estimateTokens(originalJson)
-	const compressedTokens = estimateTokens(compressed)
-
-	// Calculate reduction, ensuring it's never negative
-	let reduction = 0
-	if (originalTokens > 0 && compressedTokens < originalTokens) {
-		reduction = ((originalTokens - compressedTokens) / originalTokens) * 100
-	}
-
-	return {
-		compressed,
-		originalTokens,
-		compressedTokens,
-		reduction: Math.round(reduction),
-	}
-}
-
-/**
- * Compresses multiple tool schemas and calculates aggregate metrics
- * @param tools - Array of tools with optional input schemas
- * @returns Compressed tools with total reduction metrics
- */
-export function compressToolSchemas(tools: Array<{ name: string; inputSchema?: JsonSchema }>): {
-	compressedTools: Array<{ name: string; compressedSchema: string }>
-	totalReduction: number
-	originalTokens: number
-	compressedTokens: number
-} {
-	let totalOriginalTokens = 0
-	let totalCompressedTokens = 0
-
-	const compressedTools = tools.map((tool) => {
-		const result = compressSchemaWithMetrics(tool.inputSchema)
-		totalOriginalTokens += result.originalTokens
-		totalCompressedTokens += result.compressedTokens
-
-		return {
-			name: tool.name,
-			compressedSchema: result.compressed,
-		}
-	})
-
-	// Calculate total reduction, ensuring it's never negative
-	let totalReduction = 0
-	if (totalOriginalTokens > 0 && totalCompressedTokens < totalOriginalTokens) {
-		totalReduction = Math.round(((totalOriginalTokens - totalCompressedTokens) / totalOriginalTokens) * 100)
-	}
-
-	return {
-		compressedTools,
-		totalReduction,
-		originalTokens: totalOriginalTokens,
-		compressedTokens: totalCompressedTokens,
 	}
 }
